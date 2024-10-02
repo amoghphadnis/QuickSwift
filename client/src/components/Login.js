@@ -34,7 +34,7 @@ function Login() {
       }
       if (result.data && result.data.login) {
         localStorage.setItem('token', result.data.login.token);
-        navigate(`/profile/${result.data.login.userId}`);
+        navigate(`/HomePage/${result.data.login.userId}`);
       } else {
         alert('Login failed');
       }
