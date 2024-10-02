@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Box, Typography } from '@mui/material';
+import { TextField, Button, Box, Typography } from '@mui/material';
 
 const HomePage = () => {
     return (
@@ -20,6 +20,15 @@ const HomePage = () => {
                 <TextField label="Item 1" fullWidth margin="normal" />
                 <TextField label="Item 2" fullWidth margin="normal" />
                 <TextField label="Item 3" fullWidth margin="normal" />
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                    <TextField label="Total Cost" />
+                    <TextField label="Delivery Fee" />
+                </Box>
+
+                <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+                    Place Order
+                </Button>
             </Box>
         </Box>
     );
