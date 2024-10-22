@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState ,useContext} from 'react';
 import { useNavigate } from "react-router-dom";
 import { Box, TextField, Button, Typography, Link } from '@mui/material';
+import { UserContext } from './context/UserContext';
 
-function Login() {
+function Login({ userType }) {  // Receive userType as a prop
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // Initialize the useNavigate hook
+  const navigate = useNavigate();
+  const { setUserType, setUserId } = useContext(UserContext); // Access setUserType and setUserId from context
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,27 +19,38 @@ function Login() {
         },
         body: JSON.stringify({
           query: `
-            mutation Login($email: String!, $password: String!) {
-              login(email: $email, password: $password) {
+            mutation Login($email: String!, $password: String!, $userType: String!) {
+              login(email: $email, password: $password, userType: $userType) {
                 token
                 userId
+                userType
               }
             }
           `,
-          variables: { email, password }
+          variables: { email, password, userType }
         })
       });
 
       const result = await response.json();
       if (result.errors) {
         console.error('GraphQL errors:', result.errors);
+        alert(JSON.stringify(result.errors[0].message))
       }
       if (result.data && result.data.login) {
         localStorage.setItem('token', result.data.login.token);
-        navigate(`/HomePage/${result.data.login.userId}`);
-      } else {
-        alert('Login failed');
-      }
+        setUserType(result.data.login.userType);
+        setUserId(result.data.login.userId);
+        if (userType === 'admin') {
+          navigate(`/admin/dashboard`);
+        }
+        else if(userType ==='customer'){
+          navigate(`/customer/home`);
+        }
+        else if(userType ==='business'){
+          navigate(`/business/dashboard`);
+        }
+        
+      } 
     } catch (err) {
       console.error('Error:', err);
       alert('Login failed');
@@ -56,7 +69,7 @@ function Login() {
       }}
     >
       <Typography variant="h4" sx={{ mb: 4 }}>
-        Welcome Back
+        Login as {userType.charAt(0).toUpperCase() + userType.slice(1)} {/* Display userType dynamically */}
       </Typography>
 
       <form onSubmit={handleLogin} style={{ width: '100%', maxWidth: '400px' }}>
@@ -89,8 +102,8 @@ function Login() {
 
       <Typography variant="body2">
         Don’t have an account?{' '}
-        <Link href="/register" variant="body2">
-          Sign Up Now
+        <Link href={`/register/${userType}`} variant="body2">
+          Sign Up Now as {userType.charAt(0).toUpperCase() + userType.slice(1)}
         </Link>
       </Typography>
     </Box>

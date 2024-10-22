@@ -1,20 +1,130 @@
+type Vehicle {
+    make: String!
+    model: String!
+    year: Int!
+    licensePlate: String!
+    insuranceProof: String!
+}
+
+type Location {
+    address: String!
+    city: String!
+    postalCode: String!
+}
+
 
 type User {
     id: ID!
     username: String!
     email: String!
-  }
-
-  type AuthPayload {
-  token: String!
-  userId: ID!
+    userId: String!
+    userType: String!
+    status:String!
+    profilePicture: String  
+    phoneNumber: String      
+    driverInfo: DriverInfo
+    businessInfo: BusinessInfo
 }
 
-  type Query {
-    getUser(id: ID!): User
-  }
+type AuthPayload {
+    token: String!
+    userId: ID!
+    userType: String!  # Added userType to the AuthPayload
+}
 
-  type Mutation {
-    register(username: String!, email: String!, password: String!): User
-    login(email: String!, password: String!): AuthPayload
-  }
+type DriverInfo {
+    id:ID!
+    driverLicense: String!
+    vehicle: Vehicle
+}
+
+# Business info type
+type BusinessInfo {
+    id:ID!
+    businessLicense: String!
+    businessType: String!
+    businessLocation: Location
+}
+
+type UserAll {
+  id: ID!
+  userId: String!
+  username: String!
+  email: String!
+  userType: String
+  status: String
+  driverInfo: DriverInfo
+  businessInfo: BusinessInfo
+}
+
+type MenuItem {
+    itemId: ID!
+    name: String!
+    description: String
+    price: Float!
+    quantity: Int!
+    availabilityStatus: Boolean!
+    imageUrl: String
+    unitOfMeasurement: String
+    allergenInformation: String
+    bakedGoodsType: String
+    category: String!
+    businessId: ID!
+}
+
+
+
+input VehicleInput {
+    make: String!
+    model: String!
+    year: Int!
+    licensePlate: String!
+    insuranceProof: String!
+}
+
+input LocationInput {
+    address: String!
+    city: String!
+    postalCode: String!
+}
+
+type Query {
+        getUser(id: ID!, userType: String!): User
+        getAllUsers: [UserAll!]!     
+        getMenuItems(businessId: ID!): [MenuItem]     
+}
+
+type Mutation {
+ register(
+       username: String!,
+        email: String!,
+        password: String!,
+        userType: String!,
+        phoneNumber: String,
+        profilePicture: String,
+        driverLicense: String,     
+        vehicle: VehicleInput,      
+        businessLicense: String,
+        businessType: String,
+        businessLocation: LocationInput
+    ): User
+    login(email: String!, password: String!, userType: String!): AuthPayload 
+    approveUser(id: ID!): User
+    rejectUser(id: ID!): User
+    addMenuItem(
+        name: String!,
+        description: String,
+        price: Float!,
+        quantity: Int!,
+        availabilityStatus: Boolean!,
+        imageUrl: String,
+        unitOfMeasurement: String,
+        allergenInformation: String,
+        category: String!,
+        businessId: ID!,
+        bakedGoodsType: String,
+        size: String,
+        expiryDate: String,
+        specialInstructions: String
+    ): MenuItem
+}
