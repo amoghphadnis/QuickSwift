@@ -58,7 +58,8 @@ type UserAll {
 }
 
 type MenuItem {
-    itemId: ID!
+    id:ID!
+    itemId: String!
     name: String!
     description: String
     price: Float!
@@ -86,6 +87,32 @@ input LocationInput {
     address: String!
     city: String!
     postalCode: String!
+}
+
+input MenuItemInput {
+    id:Int
+    itemId:String
+    name: String
+    description: String
+    price: Float
+    quantity: Int
+    category: String
+    availabilityStatus: Boolean
+    imageUrl: String
+    unitOfMeasurement: String
+    allergenInformation: String
+    bakedGoodsType: String
+}
+
+type DeleteResponse {
+    success: Boolean!
+    message: String!
+}
+
+type UpdateMenuItemResponse {
+    success: Boolean!
+    message: String!
+    menuItem: MenuItem
 }
 
 type Query {
@@ -127,4 +154,8 @@ type Mutation {
         expiryDate: String,
         specialInstructions: String
     ): MenuItem
+    deleteMenuItem(itemId: String!): DeleteResponse!
+    updateMenuItem(id: ID!, input: MenuItemInput!): MenuItem
+
+
 }

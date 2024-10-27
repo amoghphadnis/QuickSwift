@@ -1,293 +1,169 @@
 import { User } from "../../model/User.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {Driver} from '../../model/Driver.js';
+import { Driver } from '../../model/Driver.js';
 import { Business } from '../../model/Business.js';
+import { Menu } from '../../model/Menu.js';
+import verifyAuthToken from "../../middleware/verifyAuthToken.js";
 
 export const resolvers = {
   Query: {
-    getUser: async (_, { id,userType }, { headers }) => {
-   
-      const token = headers.authorization?.split(' ')[1]; // Extract the token
-
-      if (!token) throw new Error('No token provided');
-
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (err) {
-        throw new Error('Invalid token');
-      }
+    getUser: async (_, { id, userType }, { headers }) => {
+      const decoded = verifyAuthToken(headers);
 
       // Check if the userId matches the decoded token id
       if (decoded.id !== id) throw new Error('You are not authorized to access this user');
 
-      const foundUser = await User.findById(id)
-      .populate('driverInfo')
-      .populate('businessInfo');
-        console.log('id...!!',id)
-      if (!foundUser && foundUser.userType === userType) throw new Error('User not found');
+      const foundUser = await User.findById(id).populate('driverInfo').populate('businessInfo');
+      if (!foundUser || foundUser.userType !== userType) throw new Error('User not found');
       return foundUser;
     },
-    getAllUsers: async (_,{},{ headers }) => {
-      
-      const token = headers.authorization?.split(' ')[1]; // Extract the token
-      if (!token) throw new Error('No token provided');
 
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (err) {
-        throw new Error('Invalid token');
-      }
-      const users = await User.find()
-      .populate('driverInfo')
-      .populate('businessInfo');
-
-         return users.filter(user => user.driverInfo || user.businessInfo);
-
+    getAllUsers: async (_, __, { headers }) => {
+      verifyAuthToken(headers); // Only need verification, no decoded details needed
+      const users = await User.find().populate('driverInfo').populate('businessInfo');
+      return users.filter(user => user.driverInfo || user.businessInfo);
     },
+
     getMenuItems: async (_, { businessId }, { headers }) => {
-      const token = headers.authorization?.split(' ')[1]; // Extract the token
-
-      if (!token) throw new Error('No token provided');
-
-      let decoded;
+      verifyAuthToken(headers);
       try {
-          decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (err) {
-          throw new Error('Invalid token');
-      }
-
-      // Fetch menu items associated with the businessId
-      try {
-          const menuItems = await Menu.find({ businessId }).populate('businessInfo');
-          return menuItems;
+        const menuItems = await Menu.find({ businessId }).populate('businessId');
+        return menuItems;
       } catch (error) {
-          throw new Error('Error retrieving menu items: ' + error.message);
+        throw new Error('Error retrieving menu items: ' + error.message);
       }
-  }
+    }
   },
 
   Mutation: {
-    register: async (_, {
-      username, 
-      email, 
-      password, 
-      userType, 
-      phoneNumber, 
-      profilePicture, 
-      driverLicense, 
-      vehicle, 
-      businessLicense, 
-      businessType, 
-      businessLocation 
-    }) => {
+    register: async (_, { username, email, password, userType, ...rest }) => {
       const existingUser = await User.findOne({ email });
       if (existingUser) throw new Error('User already exists');
 
-      let driverID=null;
-
-      if (userType === 'driver') {
-
-        if (!driverLicense) throw new Error('Driver license is required for drivers');
-        if (!vehicle || !vehicle.make || !vehicle.model || !vehicle.year || !vehicle.licensePlate) {
-          throw new Error('Vehicle information is required for drivers');
-        }
-
-        const driver = new Driver({
-          driverLicense,
-          vehicle: {
-            make: vehicle.make,
-            model: vehicle.model,
-            year: vehicle.year,
-            licensePlate: vehicle.licensePlate,
-            insuranceProof: vehicle.insuranceProof
-          }
-        });
-        driverID = await driver.save(); // Save driver details in the Driver collection
-    
-        // Set the driver's ObjectId in userData
-        
-      }
-      let businessID =null;
-      if (userType === 'business') {
-        if (!businessLicense) 
-          throw new Error('Business license is required for businesses');
-        if (!businessType) 
-          throw new Error('Business type is required for businesses');
-        if (!businessLocation || !businessLocation.address || !businessLocation.city || !businessLocation.postalCode) {
-          throw new Error('Business location information is required for businesses');
-        }
-      
-        const business = new Business({
-          businessLicense,
-          businessType,
-          businessLocation: {
-            address: businessLocation.address,
-            city: businessLocation.city,
-            postalCode: businessLocation.postalCode
-          }
-        });
-      
-        // Save business details in the Business collection and retrieve the business ID
-        const savedBusiness = await business.save(); 
-       businessID = savedBusiness._id; // Get the ObjectId of the saved business
-      
-      
-      }
-      
+      // Handle driver or business user creation based on userType
+      const additionalInfo = await handleUserType(userType, rest);
       const hashedPassword = await bcrypt.hash(password, 10);
-
-      const user = new User({ 
-        username, 
-        email, 
-        password: hashedPassword, 
-        userType, 
-        profilePicture, 
-        phoneNumber, 
-        driverInfo: userType === 'driver' ? driverID : null, 
-        businessInfo: userType === 'business' ? businessID : null, 
-        
+      
+      const user = new User({
+        username,
+        email,
+        password: hashedPassword,
+        userType,
+        ...additionalInfo // Spread in driverInfo or businessInfo
       });
 
-      
-      
+      await user.save();
 
-      try {
-        await user.save();
-      } catch (error) {
-        console.error('Error saving user:', error);
-        throw new Error('Error saving user');
-      }
-      console.log('after....user...!!',user);
-
-      return { 
-        id: user._id, 
-        username: user.username, 
-        email: user.email, 
+      return {
+        id: user._id,
+        username: user.username,
+        email: user.email,
         userType: user.userType,
-        profilePicture: user.profilePicture, 
+        profilePicture: user.profilePicture,
         phoneNumber: user.phoneNumber,
-        driverLicense: user.driverLicense,
-        vehicle: user.vehicle,
-        businessLicense: user.businessLicense,
-        businessType: user.businessType,
-        businessLocation: user.businessLocation 
       };
     },
 
-    login: async (_, { email, password ,userType }) => {
-     
-      const user = await User.findOne({ email,userType});
-     
-      if (!user || user.userType !== userType) {
-        throw new Error('Invalid email, password, or user type');
-    }
+    login: async (_, { email, password, userType }) => {
+      const user = await User.findOne({ email, userType });
+      if (!user || user.userType !== userType || user.status !== 'active') {
+        throw new Error('Invalid credentials or user is inactive');
+      }
 
-    if(user.status !== 'active'){
-      throw new Error('User is not active ');
-    }
-      
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) throw new Error('Invalid password');
 
       const token = jwt.sign({ id: user._id, userType: user.userType }, process.env.JWT_SECRET, { expiresIn: '1h' });
-      return {
-        token: token,
-        userId: user._id,
-        userType: user.userType // Return userType upon login
-      };
+      return { token, userId: user._id, userType: user.userType };
     },
-    approveUser: async (_, { id }, { headers }) => {
-      const token = headers.authorization?.split(' ')[1]; // Extract the token from the Authorization header
-      console.log('userId..appr..!!',id)
 
-      if (!token) throw new Error('No token provided');
-    
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify the token
-        // Optionally, check user roles or permissions here if necessary
-      } catch (err) {
-        throw new Error('Invalid token'); // Handle invalid token error
-      }
-    
-      try {
-        // Find and update user status to 'approved'
-        const user = await User.findByIdAndUpdate(
-          id,
-          { status: 'active' },
-          { new: true }
-        );
-        return user;
-      } catch (error) {
-        console.error('Error approving user:', error);
-        throw new Error('Failed to approve user');
-      }
+    approveUser: async (_, { id }, { headers }) => {
+      verifyAuthToken(headers); // Verifying the token
+      const user = await User.findByIdAndUpdate(id, { status: 'active' }, { new: true });
+      return user;
     },
 
     rejectUser: async (_, { id }, { headers }) => {
-      const token = headers.authorization?.split(' ')[1]; // Extract the token from the Authorization header
-    
-      if (!token) throw new Error('No token provided');
-    
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify the token
-        // Optionally, check user roles or permissions here if necessary
-      } catch (err) {
-        throw new Error('Invalid token'); // Handle invalid token error
-      }
-    
-      try {
-        // Find and update user status to 'rejected'
-        const user = await User.findByIdAndUpdate(
-          id,
-          { status: 'inactive' },
-          { new: true }
-        );
-        return user;
-      } catch (error) {
-        console.error('Error rejecting user:', error);
-        throw new Error('Failed to reject user');
-      }
+      verifyAuthToken(headers); // Verifying the token
+      const user = await User.findByIdAndUpdate(id, { status: 'inactive' }, { new: true });
+      return user;
     },
 
-    addMenuItem: async (_, { name, category, price, ingredients, businessId, size, expiryDate, specialInstructions }, { headers }) => {
-      const token = headers.authorization?.split(' ')[1]; // Extract the token
+    addMenuItem: async (_, { name, category, quantity,description,allergenInformation,unitOfMeasurement,price, ingredients, businessId, size, expiryDate, specialInstructions }, { headers }) => {
+      verifyAuthToken(headers); // Verifying the token
 
-      if (!token) throw new Error('No token provided');
-
-      let decoded;
-      try {
-          decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (err) {
-          throw new Error('Invalid token');
-      }
-
-      // Check if the userId matches the decoded token id
-      if (decoded.id !== businessId) throw new Error('You are not authorized to add menu items for this business');
-
-      // Create a new menu item
       const newMenuItem = new Menu({
-          name,
-          category,
-          price,
-          ingredients,
-          businessId,
-          size,
-          expiryDate,
-          specialInstructions,
+        name,
+        category,
+        price,
+        ingredients,
+        businessId,
+        size,
+        expiryDate,
+        quantity,
+        description,
+        specialInstructions,
+        unitOfMeasurement,
+        allergenInformation
       });
 
+      await newMenuItem.save();
+      return newMenuItem;
+    },
+
+    deleteMenuItem: async (_, { itemId }, { headers }) => {
+      verifyAuthToken(headers); // Verifying the token
+      const menuItem = await Menu.findOne({itemId});
+      if (!menuItem) return { success: false, message: 'Menu item not found' };
+
+      await Menu.findByIdAndDelete(menuItem._id);
+      return { success: true, message: 'Menu item successfully deleted' };
+    },
+
+    updateMenuItem: async (_, { id, input }, { headers }) => {
+      verifyAuthToken(headers); // Verifying the token
+    
       try {
-          // Save the new menu item to the database
-          await newMenuItem.save();
-          return newMenuItem; // Return the added menu item
+          // Find the menu item by ID
+          const menuItem = await Menu.findById(id);
+          if (!menuItem) {
+              throw new Error('Menu item not found');
+          }
+
+          // Update fields in the menu item with input values
+          Object.keys(input).forEach(key => {
+              menuItem[key] = input[key];
+          });
+
+          // Save the updated item
+          const updatedMenuItem = await menuItem.save();
+
+          return updatedMenuItem;
       } catch (error) {
-          throw new Error('Error adding menu item: ' + error.message);
+          console.error('Error updating menu item:', error);
+          throw new Error('Failed to update menu item');
       }
-  },
   }
-}
+
+  }
+};
+
+// Optional helper function for handling user types
+const handleUserType = async (userType, { driverLicense, vehicle, businessLicense, businessType, businessLocation }) => {
+  if (userType === 'driver') {
+    if (!driverLicense || !vehicle) throw new Error('Complete driver information required');
+    const driver = new Driver({ driverLicense, vehicle });
+    const savedDriver = await driver.save();
+    return { driverInfo: savedDriver._id };
+  }
+
+  if (userType === 'business') {
+    if (!businessLicense || !businessLocation) throw new Error('Complete business information required');
+    const business = new Business({ businessLicense, businessType, businessLocation });
+    const savedBusiness = await business.save();
+    return { businessInfo: savedBusiness._id };
+  }
+
+  return {}; // Return empty if no additional info is needed
+};

@@ -22,14 +22,13 @@ const menuSchema = new Schema({
     name: { type: String, required: true }, // Name of the item (e.g., "Veg Biryani", "Tomatoes")
     description: { type: String, required: false }, // Brief description of the item (optional)
     price: { type: Number, required: true }, // Price of the item
-    quantity: { type: Number, required: true }, // Number of items available in stock
+    quantity: { type: Number, default: 0 }, // Number of items available in stock
     category: { type: String, required: true }, // Category of the item (e.g., "Main Course", "Fruits", "Pastries")
     availabilityStatus: { type: Boolean, default: true }, // Availability status (in stock or out of stock)
-    imageUrl: { type: String, required: false }, // URL of the image for display purposes
+    imageUrl: { type: String }, // URL of the image for display purposes
 
     // Business-specific fields (optional)
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true }, // Reference to the associated Business
-    businessType: { type: String, required: true }, // Type of business (e.g., "restaurant", "grocery", "bakery", "cafe")
 
   
     unitOfMeasurement: { type: String, required: false }, // Applicable for grocery items (e.g., kg, lbs, each)
@@ -37,6 +36,7 @@ const menuSchema = new Schema({
 
     // Optional field for baked items
     bakedGoodsType: { type: String, required: false }, // e.g., "Bread", "Cake", "Pastry" (specific to bakery items)
+    adminApprovalStatus: { type: Boolean, default: false },
 });
 
 // Pre-save hook to generate itemId automatically

@@ -18,11 +18,13 @@ const typeDefs = fs.readFileSync(
 );
 
 const server = new ApolloServer({ typeDefs, resolvers,
+  
   context: ({ req }) => {
     // Attach the headers from the request to the context
 
     return { headers: req.headers };
   }
+
  }); // Ensure resolvers are applied
 
 server.start().then(() => {

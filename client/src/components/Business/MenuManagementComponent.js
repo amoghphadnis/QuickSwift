@@ -24,6 +24,8 @@ function MenuManagementComponent() {
         businessType: ''
     });
 
+    const [isEditing, setIsEditing] = useState(false);
+    const [editItemId, setEditItemId] = useState(null);
     const [menuItems, setMenuItems] = useState([]);
 
     // Define categories based on business type
@@ -83,7 +85,7 @@ function MenuManagementComponent() {
 
     const fetchMenuItems = async (businessId) => {
         const token = localStorage.getItem('token');
-
+       console.log('businessId....!!',businessId)
         if (!token) {
             throw new Error('No token found. Please log in.');
         }
@@ -99,6 +101,7 @@ function MenuManagementComponent() {
                     query: `
                         query GetMenuItems($businessId: ID!) {
                             getMenuItems(businessId: $businessId) {
+                                id
                                 itemId
                                 name
                                 description
@@ -189,6 +192,7 @@ function MenuManagementComponent() {
                                 name
                                 category
                                 price
+                                businessId
                             }
                         }
                     `,
@@ -202,7 +206,7 @@ function MenuManagementComponent() {
                         unitOfMeasurement: menuItem.unitOfMeasurement,
                         allergenInformation: menuItem.allergenInformation,
                         category: menuItem.category,
-                        businessId: businessInfo.businessId,
+                        businessId: businessInfo.id,
                         bakedGoodsType: menuItem.bakedGoodsType,
                         size: menuItem.size,
                         expiryDate: menuItem.expiryDate,
@@ -218,14 +222,14 @@ function MenuManagementComponent() {
             }
 
             console.log('Menu item added successfully:', result.data.addMenuItem);
-            fetchMenuItems(businessInfo.businessId);
+            fetchMenuItems(result.data.addMenuItem.businessId);
             setMenuItem({
                 name: '',
                 description: '',
                 price: '',
                 quantity: '',
                 category: '',
-                availabilityStatus: true,
+                availabilityStatus: false,
                 imageUrl: '',
                 unitOfMeasurement: '',
                 allergenInformation: '',
@@ -239,11 +243,142 @@ function MenuManagementComponent() {
         }
     };
 
+    const handleDelete = async (itemId) => {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('http://localhost:5000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+                        mutation DeleteMenuItem($itemId: String!) {
+                            deleteMenuItem(itemId: $itemId) {
+                                success
+                                message
+                            }
+                        }
+                    `,
+                    variables: { itemId }
+                })
+            });
+
+            const result = await response.json();
+            console.log('result..delete..!!',result)
+            console.log('businessInfo..!!',businessInfo)
+            if (result.errors) {
+                throw new Error(result.errors[0].message);
+            }
+           if(result.data.deleteMenuItem.success === true){
+               console.log('message...',result.message)
+               fetchMenuItems(businessInfo.id)
+           }
+            // After deleting, refresh the list
+        } catch (error) {
+            console.error('Error deleting menu item:', error);
+        }
+    };
+
+
+const clearForm = () => {
+        setMenuItem({
+            name: '',
+            description: '',
+            price: '',
+            quantity: '',
+            category: '',
+            availabilityStatus: true,
+            imageUrl: '',
+            unitOfMeasurement: '',
+            allergenInformation: '',
+            size: '',
+            expiryDate: '',
+            specialInstructions: '',
+            bakedGoodsType: ''
+        });
+        setIsEditing(false);
+        setEditItemId(null);
+    };
+
+
+   const handleEditItem = (item) => {
+    console.log('item..!!',item)
+        setMenuItem(item);
+        setIsEditing(true);
+        setEditItemId(item.id);
+    };
+
+    const handleUpdateItem = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch('http://localhost:5000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+                        mutation UpdateMenuItem($id: ID!, $input: MenuItemInput!) {
+                            updateMenuItem(id: $id, input: $input) {
+                                id
+                                itemId
+                                name
+                                description
+                                price
+                                quantity
+                                category
+                                availabilityStatus
+                                imageUrl
+                                unitOfMeasurement
+                                allergenInformation
+                                bakedGoodsType
+                            }
+                        }
+                    `,
+                    variables: {
+                        id: editItemId,
+                        input: {  
+                             name: menuItem.name,
+                            description: menuItem.description,
+                            price: parseFloat(menuItem.price), 
+                            quantity: parseInt(menuItem.quantity, 10),
+                            category: menuItem.category,
+                            availabilityStatus: menuItem.availabilityStatus,
+                            imageUrl: menuItem.imageUrl,
+                            unitOfMeasurement: menuItem.unitOfMeasurement,
+                            allergenInformation: menuItem.allergenInformation,
+                            bakedGoodsType: menuItem.bakedGoodsType}
+                    },
+                }),
+            });
+
+            const result = await response.json();
+            console.log('result...!!',result)
+             if (result.data && result.data.updateMenuItem) {
+            setMenuItems(prevItems =>
+                prevItems.map(item =>
+                    item.id === editItemId ? result.data.updateMenuItem : item
+                )
+            );
+            clearForm();
+        } else {
+            console.error('Error response:', result.errors);
+        }
+        } catch (error) {
+            console.error('Error updating menu item:', error);
+        }
+    };
+
     return (
         <div>
             <h1>Menu Management for {businessInfo.businessType}</h1>
             <h2>Business ID: {businessInfo.businessId}</h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={isEditing ? handleUpdateItem : handleSubmit}>
                 <div>
                     <label>
                         Menu Item Name:
@@ -375,18 +510,57 @@ function MenuManagementComponent() {
                 {/* Other fields can be conditionally rendered based on businessType as needed */}
 
                 <div>
-                    <button type="submit">Add Menu Item</button>
+                <button type="submit">{isEditing ? 'Update Menu Item' : 'Add Menu Item'}</button>
                 </div>
             </form>
 
             <h2>Menu Items</h2>
-            <ul>
-                {menuItems.map((item) => (
-                    <li key={item.itemId}>
-                        {item.name} - {item.price} - {item.category}
-                    </li>
-                ))}
-            </ul>
+            <table border="1" style={{ width: '100%', textAlign: 'left' }}>
+        <thead>
+          <tr>
+            <th>Item ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Availability Status</th>
+            <th>Image</th>
+            <th>Unit of Measurement</th>
+            <th>Allergen Information</th>
+            <th>Baked Goods Type</th>
+            <th>Category</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {menuItems.map((item) => (
+            <tr key={item.itemId}>
+              <td>{item.itemId}</td>
+              <td>{item.name}</td>
+              <td>{item.description}</td>
+              <td>{item.price}</td>
+              <td>{item.quantity}</td>
+              <td>{item.availabilityStatus ? 'Available' : 'Unavailable'}</td>
+              <td>
+                {/* Display image if available */}
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.name} width="50" height="50" />
+                ) : (
+                  'No Image'
+                )}
+              </td>
+              <td>{item.unitOfMeasurement}</td>
+              <td>{item.allergenInformation || 'N/A'}</td>
+              <td>{item.bakedGoodsType || 'N/A'}</td>
+              <td>{item.category}</td>
+              <td>
+                 <button onClick={() => handleEditItem(item)}>Edit</button>
+                <button onClick={() => handleDelete(item.itemId)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
         </div>
     );
 }
