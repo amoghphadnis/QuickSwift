@@ -38,11 +38,14 @@ export const resolvers = {
 
   Mutation: {
     register: async (_, { username, email, password, userType, ...rest }) => {
+      console.log('heloo..register...')
       const existingUser = await User.findOne({ email });
       if (existingUser) throw new Error('User already exists');
-
+  
       // Handle driver or business user creation based on userType
       const additionalInfo = await handleUserType(userType, rest);
+      console.log('additionalInfo...!!',additionalInfo)
+
       const hashedPassword = await bcrypt.hash(password, 10);
       
       const user = new User({
@@ -52,6 +55,7 @@ export const resolvers = {
         userType,
         ...additionalInfo // Spread in driverInfo or businessInfo
       });
+      console.log('user...!!',user)
 
       await user.save();
 
@@ -60,8 +64,7 @@ export const resolvers = {
         username: user.username,
         email: user.email,
         userType: user.userType,
-        profilePicture: user.profilePicture,
-        phoneNumber: user.phoneNumber,
+        
       };
     },
 
@@ -151,10 +154,14 @@ export const resolvers = {
 
 // Optional helper function for handling user types
 const handleUserType = async (userType, { driverLicense, vehicle, businessLicense, businessType, businessLocation }) => {
+  console.log('handleUserType...!!')
+
   if (userType === 'driver') {
     if (!driverLicense || !vehicle) throw new Error('Complete driver information required');
     const driver = new Driver({ driverLicense, vehicle });
     const savedDriver = await driver.save();
+    console.log('savedDriver...!!',savedDriver)
+
     return { driverInfo: savedDriver._id };
   }
 

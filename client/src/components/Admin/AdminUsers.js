@@ -96,6 +96,110 @@ const AdminUsers = () => {
         navigate('/login'); // Redirect to login page
       };
 
+      const approveUser = async (id) => {
+        console.log('userId...!!',id)
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found, user not authenticated.');
+            return;
+        }
+    
+        try {
+            const response = await fetch('http://localhost:5000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, // Pass the token in the header
+                },
+                body: JSON.stringify({
+                    query: `
+                        mutation ApproveUser($id: ID!) {
+                            approveUser(id: $id) {
+                                id
+                                userId
+                                username
+                                status
+                            }
+                        }
+                    `,
+                    variables: {
+                        id,
+                    },
+                }),
+            });
+    
+            const data = await response.json();
+            if (data.errors) {
+                console.error('Error approving user:', data.errors);
+                return;
+            }
+    
+            console.log('User approved successfully:', data.data.approveUser);
+            // Optionally, refresh the user list or update the state here
+            if(data.data.approveUser){
+              setUsers((prevUsers) =>
+                prevUsers.map((user) =>
+                  user.id === id ? { ...user, status: data.data.approveUser.status } : user
+                )
+              );
+            }
+           
+        } catch (error) {
+            console.error('Error approving user:', error);
+        }
+    };
+
+
+    const rejectUser = async (id) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+          console.error('No token found, user not authenticated.');
+          return;
+      }
+  
+      try {
+          const response = await fetch('http://localhost:5000/graphql', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`, // Pass the token in the header
+              },
+              body: JSON.stringify({
+                  query: `
+                      mutation RejectUser($id: ID!) {
+                          rejectUser(id: $id) {
+                              id
+                              userId
+                              status
+                          }
+                      }
+                  `,
+                  variables: {
+                      id,
+                  },
+              }),
+          });
+  
+          const data = await response.json();
+          if (data.errors) {
+              console.error('Error rejecting user:', data.errors);
+              return;
+          }
+  
+          console.log('User rejected successfully:', data.data.rejectUser);
+          // Optionally, refresh the user list or update the state here
+          if(data.data.rejectUser){
+          setUsers((prevUsers) =>
+            prevUsers.map((user) =>
+              user.id === id ? { ...user, status: data.data.rejectUser.status } : user
+            )
+          );
+        }
+      } catch (error) {
+          console.error('Error rejecting user:', error);
+      }
+  };
+
     return(
         <div>
       {users && users.length > 0 ? (
@@ -139,93 +243,9 @@ const AdminUsers = () => {
     
 }
 
-const approveUser = async (id) => {
-    console.log('userId...!!',id)
-    const token = localStorage.getItem('token');
-    if (!token) {
-        console.error('No token found, user not authenticated.');
-        return;
-    }
 
-    try {
-        const response = await fetch('http://localhost:5000/graphql', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`, // Pass the token in the header
-            },
-            body: JSON.stringify({
-                query: `
-                    mutation ApproveUser($id: ID!) {
-                        approveUser(id: $id) {
-                            id
-                            userId
-                            username
-                            status
-                        }
-                    }
-                `,
-                variables: {
-                    id,
-                },
-            }),
-        });
 
-        const data = await response.json();
-        if (data.errors) {
-            console.error('Error approving user:', data.errors);
-            return;
-        }
 
-        console.log('User approved successfully:', data.data.approveUser);
-        // Optionally, refresh the user list or update the state here
-    } catch (error) {
-        console.error('Error approving user:', error);
-    }
-};
-
-const rejectUser = async (id) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        console.error('No token found, user not authenticated.');
-        return;
-    }
-
-    try {
-        const response = await fetch('http://localhost:5000/graphql', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`, // Pass the token in the header
-            },
-            body: JSON.stringify({
-                query: `
-                    mutation RejectUser($id: ID!) {
-                        rejectUser(id: $id) {
-                            id
-                            userId
-                            status
-                        }
-                    }
-                `,
-                variables: {
-                    id,
-                },
-            }),
-        });
-
-        const data = await response.json();
-        if (data.errors) {
-            console.error('Error rejecting user:', data.errors);
-            return;
-        }
-
-        console.log('User rejected successfully:', data.data.rejectUser);
-        // Optionally, refresh the user list or update the state here
-    } catch (error) {
-        console.error('Error rejecting user:', error);
-    }
-};
 
   
 export default AdminUsers

@@ -62,23 +62,6 @@ function Register({ userType }) {
               username
               email
               userType
-              profilePicture
-              phoneNumber
-              driverLicense
-              vehicle {
-                make
-                model
-                year
-                licensePlate
-                insuranceProof
-              }
-              businessLicense
-              businessType
-              businessLocation {
-                address
-                city
-                postalCode
-              }
             }
           }
         `,
@@ -107,7 +90,6 @@ function Register({ userType }) {
         }
       };
   
-      console.log('Request Body:', JSON.stringify(requestBody, null, 2)); // Add the console log here
   
       const response = await fetch('http://localhost:5000/graphql', {
         method: 'POST',
