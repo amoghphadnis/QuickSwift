@@ -111,7 +111,13 @@ const TopBar = () => {
             <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm">
                 <DialogTitle>Add your Address</DialogTitle>
                 <DialogContent>
-                    {isLoaded && (
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary">Cancel</Button>
+                </DialogActions>
+            </Dialog>
+            
+            {isLoaded && (
                         <Autocomplete
                             onLoad={(autocomplete) => {
                                 autocompleteRef.current = autocomplete;
@@ -131,11 +137,6 @@ const TopBar = () => {
                             />
                         </Autocomplete>
                     )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog} color="primary">Cancel</Button>
-                </DialogActions>
-            </Dialog>
         </>
     );
 };

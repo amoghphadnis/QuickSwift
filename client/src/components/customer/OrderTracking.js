@@ -55,6 +55,7 @@ const OrderTracking = () => {
                                 {/* Action Buttons */}
                                 <Button variant="outlined" style={{ marginTop: '10px', marginRight: '10px' }}>View Store</Button>
                                 <Button variant="contained" color="secondary" style={{ marginTop: '10px' }}>Rate your order</Button>
+                                <Button variant="contained" color="secondary" style={{ marginTop: '10px' }}>Rate your order</Button>
 
                                 {/* Order Item Details */}
                                 <div style={{ marginTop: '10px' }}>
