@@ -1,10 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import TopBar from './components/TopBar';
 import Login from './components/Login';
 import Register from './components/Register';
 import Profile from './components/Profile';
 import HomePage from './components/HomePage';  // Optional: if you want a homepage
+import CheckoutPage from './components/customer/Checkout'; // Add this import
+import OrderTrackingPage from './components/customer/OrderTracking'; // Add this import
 import AdminComponent from './components/Admin/AdminComponent';
 import {UserProvider} from './components/context/UserContext';
 import AdminOrders from './components/Admin/AdminOrders';
@@ -22,6 +25,7 @@ function App() {
   return (
     <UserProvider>
     <Router>
+      <TopBar />
       <Navbar />
       <Routes>
         {/* Define valid static login routes */}
@@ -41,6 +45,10 @@ function App() {
 
         <Route path="/customer/profile" element={<Profile />} />
         <Route path="/customer/home" element={<HomePage />} />
+
+        {/* Checkout and Order Tracking Routes */}
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-tracking" element={<OrderTrackingPage />} />
 
         <Route path='/admin/dashboard' element={<AdminComponent />} />
         <Route path='/admin/orders' element={<AdminOrders />} />
