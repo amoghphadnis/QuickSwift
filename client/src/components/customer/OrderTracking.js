@@ -1,14 +1,17 @@
 // src/components/OrderTracking.js
 import React from 'react';
 import { Typography, Card, CardMedia, CardContent, Button, Grid } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const OrderTracking = () => {
+    const navigate = useNavigate();
+
     // Placeholder order data
     const orders = [
         {
             id: 1,
             storeName: "Royal Paan",
-            storeImage: "https://cn-geo1.uber.com/image-proc/resize/eats/format=webp/width=550/height=440/quality=70/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC9pbWFnZS1wcm9jL3Byb2Nlc3NlZF9pbWFnZXMvNzI3NTEzNmUxNTkyNzA5ZDA4MDRkOTEwMGE0ZGM5OTUvNGY0OGU3MTViNmMwNWI5YjAwYzNmYzQzNmI0ZWI2NWYuanBlZw==", // Replace with actual store image URL
+            storeImage: "https://example.com/storeImage1.jpg",
             total: 36.16,
             createdAt: "2024-08-02T04:11:00Z",
             items: [
@@ -20,7 +23,7 @@ const OrderTracking = () => {
         {
             id: 2,
             storeName: "Culture Crust",
-            storeImage: "https://cn-geo1.uber.com/image-proc/resize/eats/format=webp/width=550/height=440/quality=70/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC9pbWFnZS1wcm9jL3Byb2Nlc3NlZF9pbWFnZXMvZTE2YzI1NTdkMTZlNzU4YzJkNjYyMTIzNzdjNTI0ZjIvNzkxNWM0YTc4YTlmOTRlZDU2MzE2YzdjNGRjMGVjODkuanBlZw==", // Replace with actual store image URL
+            storeImage: "https://example.com/storeImage2.jpg",
             total: 36.76,
             createdAt: "2024-08-01T01:55:00Z",
             items: [
@@ -30,6 +33,11 @@ const OrderTracking = () => {
             ]
         }
     ];
+
+    // Function to handle navigation to TrackOrder with the specific order ID
+    const handleTrackOrder = (orderId) => {
+        navigate(`/track-order/${orderId}`);
+    };
 
     return (
         <div style={{ padding: '20px' }}>
@@ -51,11 +59,18 @@ const OrderTracking = () => {
                                 <Typography color="textSecondary">
                                     {order.items.length} items for ${order.total} • {new Date(order.createdAt).toLocaleString()}
                                 </Typography>
-                                
+
                                 {/* Action Buttons */}
                                 <Button variant="outlined" style={{ marginTop: '10px', marginRight: '10px' }}>View Store</Button>
-                                <Button variant="contained" color="secondary" style={{ marginTop: '10px' }}>Rate your order</Button>
-                                <Button variant="contained" color="secondary" style={{ marginTop: '10px' }}>Rate your order</Button>
+                                <Button variant="contained" color="secondary" style={{ marginTop: '10px', marginRight: '10px' }}>Rate your order</Button>
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    style={{ marginTop: '10px' }}
+                                    onClick={() => handleTrackOrder(order.id)} // Pass order ID to navigate
+                                >
+                                    Track your order
+                                </Button>
 
                                 {/* Order Item Details */}
                                 <div style={{ marginTop: '10px' }}>

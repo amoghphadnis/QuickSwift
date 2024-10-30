@@ -1,8 +1,9 @@
 // src/components/TrackOrder.js
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, CardContent, Grid, Divider, Button, Box, Avatar } from '@mui/material';
+import { Typography, Card, CardContent, Grid, Divider, Button, Box, Avatar, Paper } from '@mui/material';
 import Map from './Map'; // Placeholder for a map component to show driver location
 import DirectionsBikeIcon from '@mui/icons-material/DirectionsBike';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 // Placeholder driver data for demonstration
 const driverData = {
@@ -48,86 +49,87 @@ const TrackOrder = () => {
 
     return (
         <Box sx={{ padding: '20px' }}>
-            <Typography variant="h4" gutterBottom>Track Your Order</Typography>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>Track Your Order</Typography>
 
             {/* Order Summary Section */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6">Order Summary</Typography>
-                    <Divider sx={{ my: 1 }} />
-                    <Typography>Order ID: #{orderData.id}</Typography>
-                    <Typography>Restaurant Name: {orderData.restaurantName}</Typography>
-                    <Typography variant="h6" sx={{ mt: 2 }}>Items Ordered:</Typography>
-                    {orderData.items.map((item, index) => (
-                        <Typography key={index}>{item.quantity} x {item.name}</Typography>
-                    ))}
-                    <Typography variant="h6" sx={{ mt: 2 }}>Order Total: ${orderData.total.toFixed(2)}</Typography>
-                </CardContent>
-            </Card>
+            <Paper elevation={3} sx={{ mb: 3, p: 2 }}>
+                <Typography variant="h6" gutterBottom>Order Summary</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Typography><strong>Order ID:</strong> #{orderData.id}</Typography>
+                <Typography><strong>Restaurant Name:</strong> {orderData.restaurantName}</Typography>
+                <Typography variant="h6" sx={{ mt: 2 }}>Items Ordered:</Typography>
+                {orderData.items.map((item, index) => (
+                    <Typography key={index} sx={{ ml: 2 }}>{item.quantity} x {item.name}</Typography>
+                ))}
+                <Typography variant="h6" sx={{ mt: 2 }}>Order Total: ${orderData.total.toFixed(2)}</Typography>
+            </Paper>
 
             {/* Delivery Status Section */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6">Delivery Status</Typography>
-                    <Divider sx={{ my: 1 }} />
+            <Paper elevation={3} sx={{ mb: 3, p: 2 }}>
+                <Typography variant="h6" gutterBottom>Delivery Status</Typography>
+                <Divider sx={{ mb: 2 }} />
 
-                    {/* Map Component (Replace with real map implementation) */}
-                    <Box sx={{ my: 2, height: '200px', backgroundColor: '#e0e0e0' }}>
-                        <Map /> {/* Placeholder component */}
+                {/* Map Component (Replace with real map implementation) */}
+                <Box sx={{ my: 2, height: '200px', backgroundColor: '#e0e0e0', borderRadius: '8px' }}>
+                    <Map /> {/* Placeholder component */}
+                </Box>
+
+                <Typography><strong>ETA:</strong> {orderData.eta}</Typography>
+                <Typography><strong>Current Status:</strong> {orderStatus}</Typography>
+
+                {/* Driver Details */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+                    <Avatar src={driverData.photo} alt={driverData.name} sx={{ width: 56, height: 56, mr: 2 }} />
+                    <Box>
+                        <Typography variant="body1"><strong>Driver:</strong> {driverData.name}</Typography>
+                        <Typography variant="body2">Contact: {driverData.contact}</Typography>
                     </Box>
-
-                    <Typography>Estimated Time of Arrival (ETA): {orderData.eta}</Typography>
-                    <Typography>Current Status: {orderStatus}</Typography>
-
-                    {/* Driver Details */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-                        <Avatar src={driverData.photo} alt={driverData.name} sx={{ width: 56, height: 56, mr: 2 }} />
-                        <Box>
-                            <Typography variant="body1">Driver: {driverData.name}</Typography>
-                            <Typography variant="body2">Contact: {driverData.contact}</Typography>
-                        </Box>
-                    </Box>
-                </CardContent>
-            </Card>
+                </Box>
+            </Paper>
 
             {/* Order Timeline Section */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="h6">Order Timeline</Typography>
-                    <Divider sx={{ my: 1 }} />
+            <Paper elevation={3} sx={{ mb: 3, p: 2 }}>
+                <Typography variant="h6" gutterBottom>Order Timeline</Typography>
+                <Divider sx={{ mb: 2 }} />
 
-                    <Typography>Order Placed: {new Date(orderData.timeline.placed).toLocaleString()}</Typography>
-                    <Typography>Food Preparation Started: {new Date(orderData.timeline.preparing).toLocaleString()}</Typography>
-                    <Typography>Driver Picked Up Order: {new Date(orderData.timeline.pickedUp).toLocaleString()}</Typography>
-                    <Typography>En Route: {new Date(orderData.timeline.enRoute).toLocaleString()}</Typography>
-                    {orderData.timeline.delivered ? (
-                        <Typography>Delivered: {new Date(orderData.timeline.delivered).toLocaleString()}</Typography>
-                    ) : (
-                        <Typography>Delivered: Pending</Typography>
-                    )}
-                </CardContent>
-            </Card>
+                <Typography><strong>Order Placed:</strong> {new Date(orderData.timeline.placed).toLocaleString()}</Typography>
+                <Typography><strong>Food Preparation Started:</strong> {new Date(orderData.timeline.preparing).toLocaleString()}</Typography>
+                <Typography><strong>Driver Picked Up Order:</strong> {new Date(orderData.timeline.pickedUp).toLocaleString()}</Typography>
+                <Typography><strong>En Route:</strong> {new Date(orderData.timeline.enRoute).toLocaleString()}</Typography>
+                {orderData.timeline.delivered ? (
+                    <Typography><strong>Delivered:</strong> {new Date(orderData.timeline.delivered).toLocaleString()}</Typography>
+                ) : (
+                    <Typography><strong>Delivered:</strong> Pending</Typography>
+                )}
+            </Paper>
 
             {/* Customer Actions */}
             <Grid container spacing={2}>
-                <Grid item xs={6}>
+                <Grid item xs={12} sm={6}>
                     <Button
                         variant="contained"
                         color="primary"
                         startIcon={<DirectionsBikeIcon />}
                         fullWidth
                         href={`tel:${driverData.contact}`}
+                        sx={{ padding: '10px 0', fontSize: '16px' }}
                     >
                         Contact Driver
                     </Button>
                 </Grid>
-                <Grid item xs={6}>
-                    <Button variant="outlined" color="secondary" fullWidth>
+                <Grid item xs={12} sm={6}>
+                    <Button
+                        variant="outlined"
+                        color="secondary"
+                        startIcon={<HelpOutlineIcon />}
+                        fullWidth
+                        sx={{ padding: '10px 0', fontSize: '16px' }}
+                    >
                         Help
                     </Button>
                 </Grid>
             </Grid>
-        </Box >
+        </Box>
     );
 };
 

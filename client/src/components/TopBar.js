@@ -6,6 +6,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SearchIcon from '@mui/icons-material/Search';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
+import zIndex from '@mui/material/styles/zIndex';
 
 const TopBar = () => {
     const [location, setLocation] = useState("Fetching location...");
@@ -125,18 +126,18 @@ const TopBar = () => {
                                 autocomplete.addListener("place_changed", handlePlaceSelect);
                             }}
                         >
-                            <TextField
-                                fullWidth
-                                placeholder="Search for an address"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                InputProps={{
-                                    startAdornment: <SearchIcon sx={{ mr: 1 }} />
-                                }}
-                                sx={{ position: 'relative', zIndex: 1000 }}
-                            />
+                                <TextField
+                                    fullWidth
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search for an address"
+                                    InputProps={{
+                                        startAdornment: <SearchIcon sx={{ mr: 1 }} />
+                                    }}
+                                />
                         </Autocomplete>
                     )}
+            
         </>
     );
 };

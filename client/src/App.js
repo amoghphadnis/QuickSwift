@@ -8,6 +8,7 @@ import Profile from './components/Profile';
 import HomePage from './components/HomePage';  // Optional: if you want a homepage
 import CheckoutPage from './components/customer/Checkout'; // Add this import
 import OrderTrackingPage from './components/customer/OrderTracking'; // Add this import
+import TrackOrder from './components/customer/TrackOrder'; // Add this import'
 import AdminComponent from './components/Admin/AdminComponent';
 import {UserProvider} from './components/context/UserContext';
 import AdminOrders from './components/Admin/AdminOrders';
@@ -49,6 +50,8 @@ function App() {
         {/* Checkout and Order Tracking Routes */}
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-tracking" element={<OrderTrackingPage />} />
+        <Route path="/track-order/:orderId" element={<TrackOrder />} />
+
 
         <Route path='/admin/dashboard' element={<AdminComponent />} />
         <Route path='/admin/orders' element={<AdminOrders />} />
