@@ -116,17 +116,17 @@ const TrackOrder = () => {
                         color="primary"
                         startIcon={<DirectionsBikeIcon />}
                         fullWidth
-                        href={tel:${driverData.contact}}
+                        href={`tel:${driverData.contact}`}
                     >
-                    Contact Driver
-                </Button>
+                        Contact Driver
+                    </Button>
+                </Grid>
+                <Grid item xs={6}>
+                    <Button variant="outlined" color="secondary" fullWidth>
+                        Help
+                    </Button>
+                </Grid>
             </Grid>
-            <Grid item xs={6}>
-                <Button variant="outlined" color="secondary" fullWidth>
-                    Help
-                </Button>
-            </Grid>
-        </Grid>
         </Box >
     );
 };
