@@ -33,7 +33,31 @@ export const resolvers = {
       } catch (error) {
         throw new Error('Error retrieving menu items: ' + error.message);
       }
-    }
+    },
+    getMenuItemsList: async (_, __, { headers }) => {
+      verifyAuthToken(headers);
+
+      try {
+          // Fetch all menu items and populate the businessType field from the Business model
+          const menuItemsList = await Menu.find().populate('businessId');
+          
+          // Transform the result to include businessType directly in the menu item response
+          const menuItemsWithBusinessType = menuItemsList.map(menuItem => {
+            const itemObject = menuItem.toObject();
+            return {
+                id: itemObject._id.toString(), // Ensure `id` is mapped correctly from `_id`
+                ...itemObject,
+                businessType: itemObject.businessId?.businessType || null,
+                businessId: itemObject.businessId?._id.toString() || null // Ensure businessId exists and is a string
+            };
+        });
+       console.log('menuItemsWithBusinessType...!!',menuItemsWithBusinessType)
+          return menuItemsWithBusinessType;
+      } catch (error) {
+          console.error('Error fetching menu items:', error);
+          throw new Error('Failed to fetch menu items.');
+      }
+  }
   },
 
   Mutation: {

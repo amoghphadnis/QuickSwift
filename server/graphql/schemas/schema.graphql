@@ -71,6 +71,8 @@ type MenuItem {
     bakedGoodsType: String
     category: String!
     businessId: ID!
+    adminApprovalStatus: Boolean
+    businessType: String
 }
 
 
@@ -118,7 +120,9 @@ type UpdateMenuItemResponse {
 type Query {
         getUser(id: ID!, userType: String!): User
         getAllUsers: [UserAll!]!     
-        getMenuItems(businessId: ID!): [MenuItem]     
+        getMenuItems(businessId: ID!): [MenuItem]  
+        getMenuItemsList: [MenuItem]
+   
 }
 
 type Mutation {
