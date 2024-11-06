@@ -6,11 +6,14 @@ import { fileURLToPath } from "url";
 import {} from "./model/database.js";
 
 
+
+
 import { resolvers } from "./graphql/resolvers/resolver.js"; // Correctly import resolvers
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(express.json()); 
+
 
 const typeDefs = fs.readFileSync(
   path.join(__dirname, "graphql/schemas/schema.graphql"),
@@ -32,7 +35,9 @@ server.start().then(() => {
 });
 
 
+
 const port = process.env.PORT || 5000;
+
 
 
 

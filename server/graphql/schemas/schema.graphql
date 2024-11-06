@@ -117,6 +117,12 @@ type UpdateMenuItemResponse {
     menuItem: MenuItem
 }
 
+ type PaymentIntent {
+        id: String!
+        clientSecret: String!
+        status: String
+}
+
 type Query {
         getUser(id: ID!, userType: String!): User
         getAllUsers: [UserAll!]!     
@@ -160,6 +166,7 @@ type Mutation {
     ): MenuItem
     deleteMenuItem(itemId: String!): DeleteResponse!
     updateMenuItem(id: ID!, input: MenuItemInput!): MenuItem
-
+    createPaymentIntent(description: String!, amount: Float!): PaymentIntent
+    capturePayment(orderId: String!): PaymentIntent
 
 }

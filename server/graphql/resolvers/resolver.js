@@ -5,6 +5,8 @@ import { Driver } from '../../model/Driver.js';
 import { Business } from '../../model/Business.js';
 import { Menu } from '../../model/Menu.js';
 import verifyAuthToken from "../../middleware/verifyAuthToken.js";
+import paypal from '@paypal/checkout-server-sdk';
+import client from '../../paypal/paypalClient.js';
 
 export const resolvers = {
   Query: {
@@ -101,7 +103,7 @@ export const resolvers = {
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) throw new Error('Invalid password');
 
-      const token = jwt.sign({ id: user._id, userType: user.userType }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const token = jwt.sign({ id: user._id, userType: user.userType }, process.env.JWT_SECRET, { expiresIn: '24h' });
       return { token, userId: user._id, userType: user.userType };
     },
 
@@ -171,7 +173,51 @@ export const resolvers = {
           console.error('Error updating menu item:', error);
           throw new Error('Failed to update menu item');
       }
-  }
+  },
+  createPaymentIntent: async (_, { description, amount },{ headers }) => {
+    verifyAuthToken(headers);
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody({
+        intent: "CAPTURE",
+        purchase_units: [{
+            amount: {
+                currency_code: "USD",
+                value: amount.toFixed(2),
+            },
+            description,
+        }],
+    });
+
+    try {
+        const response = await client.execute(request);
+        return {
+            id: response.result.id,
+            clientSecret: response.result.id, // This can be used as client secret if needed
+            status: response.result.status,
+        };
+    } catch (error) {
+        console.error("Error creating payment intent:", error);
+        throw new Error("Failed to create payment intent");
+    }
+  },
+  capturePayment: async (_, { orderId },{ headers }) => {
+    verifyAuthToken(headers);
+    const request = new paypal.orders.OrdersCaptureRequest(orderId);
+    request.requestBody({});
+
+    try {
+        const response = await client.execute(request);
+        return {
+            id: response.result.id,
+            status: response.result.status,
+        };
+    } catch (error) {
+        console.error("Error capturing payment:", error);
+        throw new Error("Failed to capture payment");
+    }
+}
+
 
   }
 };
