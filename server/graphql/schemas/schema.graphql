@@ -9,7 +9,7 @@ type Vehicle {
 type Location {
     address: String!
     city: String!
-    postalCode: String!
+    postalcode: String!
 }
 
 
@@ -29,7 +29,7 @@ type User {
 type AuthPayload {
     token: String!
     userId: ID!
-    userType: String!  # Added userType to the AuthPayload
+    userType: String!  
 }
 
 type DriverInfo {
@@ -40,12 +40,15 @@ type DriverInfo {
 
 # Business info type
 type BusinessInfo {
-    id:ID!
+    id: ID!
     businessLicense: String!
     businessType: String!
     businessLocation: Location
+    businessName: String!
+    businessLogo: String
+    bannerImage: String
+    openingHours: [OpeningHour]
 }
-
 type UserAll {
   id: ID!
   userId: String!
@@ -75,6 +78,11 @@ type MenuItem {
     businessType: String
 }
 
+type OpeningHour {
+    day: String!
+    openTime: String!
+    closeTime: String!
+}
 
 
 input VehicleInput {
@@ -88,7 +96,7 @@ input VehicleInput {
 input LocationInput {
     address: String!
     city: String!
-    postalCode: String!
+    postalcode: String!
 }
 
 input MenuItemInput {
@@ -104,6 +112,13 @@ input MenuItemInput {
     unitOfMeasurement: String
     allergenInformation: String
     bakedGoodsType: String
+}
+
+
+input OpeningHourInput {
+    day: String!
+    openTime: String!
+    closeTime: String!
 }
 
 type DeleteResponse {
@@ -127,23 +142,26 @@ type Query {
         getUser(id: ID!, userType: String!): User
         getAllUsers: [UserAll!]!     
         getMenuItems(businessId: ID!): [MenuItem]  
-        getMenuItemsList: [MenuItem]
-   
+        getMenuItemsList: [MenuItem] 
 }
 
 type Mutation {
- register(
-       username: String!,
+register(
+        username: String!,
         email: String!,
         password: String!,
         userType: String!,
         phoneNumber: String,
         profilePicture: String,
-        driverLicense: String,     
-        vehicle: VehicleInput,      
+        driverLicense: String,
+        vehicle: VehicleInput,
         businessLicense: String,
         businessType: String,
-        businessLocation: LocationInput
+        businessName: String,
+        businessLogo: String,
+        bannerImage: String,
+        businessLocation: LocationInput,
+        openingHours: [OpeningHourInput]
     ): User
     login(email: String!, password: String!, userType: String!): AuthPayload 
     approveUser(id: ID!): User

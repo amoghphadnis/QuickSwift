@@ -64,25 +64,30 @@ export const resolvers = {
 
   Mutation: {
     register: async (_, { username, email, password, userType, ...rest }) => {
-      console.log('heloo..register...')
+      console.log('Register mutation started');
+
+      // Check if the user already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) throw new Error('User already exists');
-  
-      // Handle driver or business user creation based on userType
-      const additionalInfo = await handleUserType(userType, rest);
-      console.log('additionalInfo...!!',additionalInfo)
 
+      // Handle user type logic based on the userType (driver or business)
+      const additionalInfo = await handleUserType(userType, rest);
+      console.log('Additional info:', additionalInfo);
+
+      // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
       
+      // Create the user
       const user = new User({
         username,
         email,
         password: hashedPassword,
         userType,
-        ...additionalInfo // Spread in driverInfo or businessInfo
+        ...additionalInfo // Spread the additional info based on userType
       });
-      console.log('user...!!',user)
+      console.log('User to be saved:', user);
 
+      // Save the user to the database
       await user.save();
 
       return {
@@ -90,7 +95,8 @@ export const resolvers = {
         username: user.username,
         email: user.email,
         userType: user.userType,
-        
+        driverInfo: user.driverInfo,
+        businessInfo: user.businessInfo,
       };
     },
 
@@ -223,8 +229,9 @@ export const resolvers = {
 };
 
 // Optional helper function for handling user types
-const handleUserType = async (userType, { driverLicense, vehicle, businessLicense, businessType, businessLocation }) => {
-  console.log('handleUserType...!!')
+const handleUserType = async (userType, { driverLicense, vehicle, businessLicense, businessType, businessLocation,businessName,businessLogo,bannerImage,openingHours }) => {
+  console.log('businessType...!!',businessType)
+  console.log('businessLicense...!!',businessLicense)
 
   if (userType === 'driver') {
     if (!driverLicense || !vehicle) throw new Error('Complete driver information required');
@@ -237,7 +244,7 @@ const handleUserType = async (userType, { driverLicense, vehicle, businessLicens
 
   if (userType === 'business') {
     if (!businessLicense || !businessLocation) throw new Error('Complete business information required');
-    const business = new Business({ businessLicense, businessType, businessLocation });
+    const business = new Business({ businessLicense, businessType, businessLocation,businessName,businessLogo,bannerImage,openingHours});
     const savedBusiness = await business.save();
     return { businessInfo: savedBusiness._id };
   }
