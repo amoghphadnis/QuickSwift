@@ -31,6 +31,7 @@ export const resolvers = {
       verifyAuthToken(headers);
       try {
         const menuItems = await Menu.find({ businessId }).populate('businessId');
+        console.log('menuItems...!!',menuItems)
         return menuItems;
       } catch (error) {
         throw new Error('Error retrieving menu items: ' + error.message);
@@ -125,28 +126,44 @@ export const resolvers = {
       return user;
     },
 
-    addMenuItem: async (_, { name, category, quantity,description,allergenInformation,unitOfMeasurement,price, ingredients, businessId, size, expiryDate, specialInstructions }, { headers }) => {
-      verifyAuthToken(headers); // Verifying the token
-
+    addMenuItem: async (_, {
+      name, 
+      description, 
+      price, 
+      quantity, 
+      stockStatus, 
+      imageItem, 
+      unitOfMeasurement, 
+      allergenInformation, 
+      category, 
+      subcategory, 
+      businessId, 
+      featured = false,  
+      discount = 0       
+  }, { headers }) => {
+      verifyAuthToken(headers); 
+  
       const newMenuItem = new Menu({
-        name,
-        category,
-        price,
-        ingredients,
-        businessId,
-        size,
-        expiryDate,
-        quantity,
-        description,
-        specialInstructions,
-        unitOfMeasurement,
-        allergenInformation
+          name,
+          description,
+          price,
+          quantity,
+          stockStatus,
+          imageItem,
+          unitOfMeasurement,
+          allergenInformation,
+          category,
+          subcategory,
+          businessId,
+          featured,
+          discount
       });
-
+  
       await newMenuItem.save();
       return newMenuItem;
-    },
-
+  },
+  
+  
     deleteMenuItem: async (_, { itemId }, { headers }) => {
       verifyAuthToken(headers); // Verifying the token
       const menuItem = await Menu.findOne({itemId});
@@ -230,9 +247,7 @@ export const resolvers = {
 
 // Optional helper function for handling user types
 const handleUserType = async (userType, { driverLicense, vehicle, businessLicense, businessType, businessLocation,businessName,businessLogo,bannerImage,openingHours }) => {
-  console.log('businessType...!!',businessType)
-  console.log('businessLicense...!!',businessLicense)
-
+ 
   if (userType === 'driver') {
     if (!driverLicense || !vehicle) throw new Error('Complete driver information required');
     const driver = new Driver({ driverLicense, vehicle });

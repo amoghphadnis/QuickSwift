@@ -61,21 +61,22 @@ type UserAll {
 }
 
 type MenuItem {
-    id:ID!
+    id: ID!
     itemId: String!
     name: String!
     description: String
+    category: String!
+    subcategory: String
     price: Float!
     quantity: Int!
-    availabilityStatus: Boolean!
-    imageUrl: String
+    stockStatus: Boolean!
     unitOfMeasurement: String
     allergenInformation: String
-    bakedGoodsType: String
-    category: String!
+    imageItem: String
     businessId: ID!
+    featured: Boolean
+    discount: Float
     adminApprovalStatus: Boolean
-    businessType: String
 }
 
 type OpeningHour {
@@ -166,22 +167,22 @@ register(
     login(email: String!, password: String!, userType: String!): AuthPayload 
     approveUser(id: ID!): User
     rejectUser(id: ID!): User
-    addMenuItem(
+   addMenuItem(
         name: String!,
         description: String,
         price: Float!,
         quantity: Int!,
-        availabilityStatus: Boolean!,
-        imageUrl: String,
+        stockStatus: Boolean!,
+        imageItem: String,
         unitOfMeasurement: String,
         allergenInformation: String,
         category: String!,
+        subcategory: String,
         businessId: ID!,
-        bakedGoodsType: String,
-        size: String,
-        expiryDate: String,
-        specialInstructions: String
+        featured: Boolean,
+        discount: Float
     ): MenuItem
+
     deleteMenuItem(itemId: String!): DeleteResponse!
     updateMenuItem(id: ID!, input: MenuItemInput!): MenuItem
     createPaymentIntent(description: String!, amount: Float!): PaymentIntent

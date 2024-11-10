@@ -18,24 +18,20 @@ const generateItemId = (businessType) => {
 };
 
 const menuSchema = new Schema({
-    itemId: { type: String, unique: true }, // Will be generated automatically
-    name: { type: String, required: true }, // Name of the item (e.g., "Veg Biryani", "Tomatoes")
-    description: { type: String, required: false }, // Brief description of the item (optional)
-    price: { type: Number, required: true }, // Price of the item
-    quantity: { type: Number, default: 0 }, // Number of items available in stock
-    category: { type: String, required: true }, // Category of the item (e.g., "Main Course", "Fruits", "Pastries")
-    availabilityStatus: { type: Boolean, default: true }, // Availability status (in stock or out of stock)
-    imageUrl: { type: String }, // URL of the image for display purposes
-
-    // Business-specific fields (optional)
-    businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true }, // Reference to the associated Business
-
-  
-    unitOfMeasurement: { type: String, required: false }, // Applicable for grocery items (e.g., kg, lbs, each)
-    allergenInformation: { type: String, required: false }, // Information about common allergens (if applicable)
-
-    // Optional field for baked items
-    bakedGoodsType: { type: String, required: false }, // e.g., "Bread", "Cake", "Pastry" (specific to bakery items)
+    itemId: { type: String, unique: true }, 
+    name: { type: String, required: true }, 
+    description: { type: String, required: false }, 
+    category: { type: String, required: true }, 
+    subcategory: { type: String, required: false },
+    price: { type: Number, required: true }, 
+    quantity: { type: Number, default: 0 },
+    unitOfMeasurement: { type: String, required: false },
+    stockStatus: { type: Boolean, default: true },
+    allergenInformation: { type: String, required: false },
+    imageItem: { type: String },
+    businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true },
+    featured: { type: Boolean, default: false },
+    discount: { type: Number, default: 0 },
     adminApprovalStatus: { type: Boolean, default: false },
 });
 

@@ -1,22 +1,28 @@
-import React, { useState, useEffect ,useContext} from 'react';
-import { UserContext }  from '../context/UserContext';
+import React, { useState, useEffect, useContext } from 'react';
+import { UserContext } from '../context/UserContext';
+import groceryStoreList from '../BusinessCategory/groceryStoreList.json';
 
 function MenuManagementComponent() {
     const { userType, userId } = useContext(UserContext);
+    const [allUnits, setAllUnits] = useState([]);
+    const [menuItems, setMenuItems] = useState([]);
+
     const [menuItem, setMenuItem] = useState({
         name: '',
         description: '',
         price: '',
         quantity: '',
         category: '',
-        availabilityStatus: true,
-        imageUrl: '',
+        subcategory: '',
         unitOfMeasurement: '',
         allergenInformation: '',
-        size: '',
-        expiryDate: '',
-        specialInstructions: '',
-        bakedGoodsType: ''
+        imageItem: '',
+        businessId: userId,
+        featured: false,
+        discount: 0,
+        stockStatus: true,
+        customCategory: '',
+        customSubcategories: []
     });
 
     const [businessInfo, setBusinessInfo] = useState({
@@ -24,17 +30,6 @@ function MenuManagementComponent() {
         businessType: ''
     });
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [editItemId, setEditItemId] = useState(null);
-    const [menuItems, setMenuItems] = useState([]);
-
-    // Define categories based on business type
-    const categories = {
-        restaurant: ['Veg', 'Non-Veg', 'Beverages', 'Sweets'],
-        grocery_store: ['Fruits', 'Vegetables', 'Dairy', 'Snacks'],
-        cafe: ['Coffee', 'Tea', 'Pastries'],
-        bakery: ['Bread', 'Cakes', 'Pastries'],
-    };
 
     const fetchUserData = async () => {
         const token = localStorage.getItem('token');
@@ -52,30 +47,30 @@ function MenuManagementComponent() {
                 },
                 body: JSON.stringify({
                     query: `
-                        query GetUser($id: ID!, $userType: String!) {
-                            getUser(id: $id, userType: $userType) {
-                                username
-                                email
-                                userType
-                                businessInfo {
-                                    id
-                                    businessType
-                                }
+                    query GetUser($id: ID!, $userType: String!) {
+                        getUser(id: $id, userType: $userType) {
+                            username
+                            email
+                            userType
+                            businessInfo {
+                                id
+                                businessType
                             }
                         }
-                    `,
+                    }
+                `,
                     variables: { id: userId, userType: userType }
                 })
             });
 
             const result = await response.json();
-            console.log('result..!',result)
+            console.log('result..!', result)
             if (result.errors) {
                 throw new Error(result.errors[0].message);
             }
 
             const userData = result.data.getUser;
-            
+
             setBusinessInfo(userData.businessInfo);
             fetchMenuItems(userData.businessInfo.id);
         } catch (error) {
@@ -85,7 +80,8 @@ function MenuManagementComponent() {
 
     const fetchMenuItems = async (businessId) => {
         const token = localStorage.getItem('token');
-       console.log('businessId....!!',businessId)
+        console.log('Fetching menu items for business ID:', businessId); // Debugging line
+
         if (!token) {
             throw new Error('No token found. Please log in.');
         }
@@ -99,50 +95,115 @@ function MenuManagementComponent() {
                 },
                 body: JSON.stringify({
                     query: `
-                        query GetMenuItems($businessId: ID!) {
-                            getMenuItems(businessId: $businessId) {
-                                id
-                                itemId
-                                name
-                                description
-                                price
-                                quantity
-                                availabilityStatus
-                                imageUrl
-                                unitOfMeasurement
-                                allergenInformation
-                                bakedGoodsType
-                                category
-                            }
-                        }
-                    `,
-                    variables: { businessId }
-                })
+            query GetMenuItems($businessId: ID!) {
+              getMenuItems(businessId: $businessId) {
+                id
+    itemId
+    name
+    description
+    price
+    quantity
+    stockStatus
+    imageItem
+    unitOfMeasurement
+    allergenInformation
+    category
+    subcategory
+    featured
+    discount
+    adminApprovalStatus
+              }
+            }
+          `,
+                    variables: { businessId },
+                }),
             });
 
             const result = await response.json();
-
+         console.log('getmenu...!!',result);
             if (result.errors) {
                 throw new Error(result.errors[0].message);
             }
 
+            // Update the state with the fetched menu items
             setMenuItems(result.data.getMenuItems);
         } catch (error) {
             console.error('Error fetching menu items:', error);
         }
+
+    }
+    // Handle form field changes
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setMenuItem((prevState) => ({
+            ...prevState,
+            [name]: value,
+        }));
     };
 
-    useEffect(() => {
-        
-            fetchUserData();
-       
-    }, [userId,userType]);
+    // Handle category change and reset subcategory
+    const handleCategoryChange = (e) => {
+        const selectedCategory = e.target.value;
+        setMenuItem((prevState) => ({
+            ...prevState,
+            category: selectedCategory,
+            subcategory: '', // Reset subcategory when category changes
+            customCategory: '' // Reset custom category if another option is selected
+        }));
 
+        if (selectedCategory === 'Other') {
+            const allUnitsFromJson = [...new Set(groceryStoreList.flatMap(item => item.units))];
+            setAllUnits(allUnitsFromJson);
+        } else {
+            setAllUnits([]); // Clear units if not 'Other'
+        }
+
+    };
+
+    // Handle subcategory change
+    const handleSubcategoryChange = (e) => {
+        setMenuItem((prevState) => ({
+            ...prevState,
+            subcategory: e.target.value,
+        }));
+    };
+
+    // Handle adding custom subcategories
+    const handleCustomSubcategoryChange = (e) => {
+        const { value } = e.target;
+        setMenuItem((prevState) => ({
+            ...prevState,
+            customSubcategories: value.split(',').map(sub => sub.trim()) // Split by comma for multiple subcategories
+        }));
+    };
+
+    // Handle checkbox toggle for availability status
+    const handleCheckboxChange = (e) => {
+        console.log('checked..!!',e.target.checked)
+        setMenuItem((prevState) => ({
+            ...prevState,
+            stockStatus: e.target.checked,
+        }));
+    };
+
+
+    const handleEdit = (id) => {
+        console.log('Edit menu item with ID:', id);
+        
+    };
+
+    // Function to handle delete action
+    const handleDelete = (id) => {
+        console.log('Delete menu item with ID:', id);
+       
+    };
+
+
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        console.log('menuItem.....!!',menuItem)
         const token = localStorage.getItem('token');
-
         if (!token) {
             throw new Error('No token found. Please log in.');
         }
@@ -156,411 +217,346 @@ function MenuManagementComponent() {
                 },
                 body: JSON.stringify({
                     query: `
-                        mutation AddMenuItem(
-                            $name: String!,
-                            $description: String,
-                            $price: Float!,
-                            $quantity: Int!,
-                            $availabilityStatus: Boolean!,
-                            $imageUrl: String,
-                            $unitOfMeasurement: String,
-                            $allergenInformation: String,
-                            $category: String!,
-                            $businessId: ID!,
-                            $bakedGoodsType: String,
-                            $size: String,
-                            $expiryDate: String,
-                            $specialInstructions: String
+                    mutation AddMenuItem(
+                        $name: String!,
+                        $description: String,
+                        $price: Float!,
+                        $quantity: Int!,
+                        $stockStatus: Boolean!,
+                        $imageItem: String,
+                        $unitOfMeasurement: String,
+                        $allergenInformation: String,
+                        $category: String!,
+                        $subcategory:String!,
+                        $businessId: ID!,
+                        $featured: Boolean,
+                        $discount: Float,
+                    ) {
+                        addMenuItem(
+                            name: $name,
+                            description: $description,
+                            price: $price,
+                            quantity: $quantity,
+                            stockStatus: $stockStatus,
+                            imageItem: $imageItem,
+                            unitOfMeasurement: $unitOfMeasurement,
+                            allergenInformation: $allergenInformation,
+                            category: $category,
+                            businessId: $businessId,
+                            featured: $featured,
+                            discount: $discount,
+                            subcategory:$subcategory
                         ) {
-                            addMenuItem(
-                                name: $name,
-                                description: $description,
-                                price: $price,
-                                quantity: $quantity,
-                                availabilityStatus: $availabilityStatus,
-                                imageUrl: $imageUrl,
-                                unitOfMeasurement: $unitOfMeasurement,
-                                allergenInformation: $allergenInformation,
-                                category: $category,
-                                businessId: $businessId,
-                                bakedGoodsType: $bakedGoodsType,
-                                size: $size,
-                                expiryDate: $expiryDate,
-                                specialInstructions: $specialInstructions
-                            ) {
-                                id
-                                name
-                                category
-                                price
-                                businessId
-                            }
+                            id
+                            name
+                            category
+                            price
+                            businessId
                         }
-                    `,
+                    }
+                `,
                     variables: {
                         name: menuItem.name,
                         description: menuItem.description,
                         price: parseFloat(menuItem.price),
                         quantity: parseInt(menuItem.quantity, 10),
-                        availabilityStatus: menuItem.availabilityStatus,
-                        imageUrl: menuItem.imageUrl,
+                        stockStatus: menuItem.stockStatus,
+                        imageItem: menuItem.imageItem,
                         unitOfMeasurement: menuItem.unitOfMeasurement,
                         allergenInformation: menuItem.allergenInformation,
-                        category: menuItem.category,
+                        category: menuItem.category === 'Other' ? menuItem.customCategory : menuItem.category,
                         businessId: businessInfo.id,
-                        bakedGoodsType: menuItem.bakedGoodsType,
-                        size: menuItem.size,
-                        expiryDate: menuItem.expiryDate,
-                        specialInstructions: menuItem.specialInstructions
+                        featured: menuItem.featured,
+                        discount: parseFloat(menuItem.discount),
+                        subcategory: menuItem.subcategory === 'Other' ? menuItem.customSubcategories : menuItem.subcategory,
                     }
                 })
             });
 
             const result = await response.json();
-            console.log('result...!!',result)
             if (result.errors) {
                 throw new Error(result.errors[0].message);
             }
 
             console.log('Menu item added successfully:', result.data.addMenuItem);
             fetchMenuItems(result.data.addMenuItem.businessId);
+
+            // Reset form
             setMenuItem({
                 name: '',
                 description: '',
                 price: '',
                 quantity: '',
                 category: '',
-                availabilityStatus: false,
-                imageUrl: '',
+                subcategory: '',
                 unitOfMeasurement: '',
                 allergenInformation: '',
-                size: '',
-                expiryDate: '',
-                specialInstructions: '',
-                bakedGoodsType: ''
+                imageItem: '',
+                featured: false,
+                discount: 0,
+                stockStatus: true,
+                customCategory: '',
+                customSubcategories: ''
             });
         } catch (error) {
             console.error('Error adding menu item:', error);
         }
     };
 
-    const handleDelete = async (itemId) => {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch('http://localhost:5000/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    query: `
-                        mutation DeleteMenuItem($itemId: String!) {
-                            deleteMenuItem(itemId: $itemId) {
-                                success
-                                message
-                            }
-                        }
-                    `,
-                    variables: { itemId }
-                })
-            });
+    // Get the list of subcategories for the selected category
+    // Get the list of subcategories and units for the selected category
+    const getCategoryData = () => {
+        return groceryStoreList.find((item) => item.category === menuItem.category);
+    };
 
-            const result = await response.json();
-            console.log('result..delete..!!',result)
-            console.log('businessInfo..!!',businessInfo)
-            if (result.errors) {
-                throw new Error(result.errors[0].message);
-            }
-           if(result.data.deleteMenuItem.success === true){
-               console.log('message...',result.message)
-               fetchMenuItems(businessInfo.id)
-           }
-            // After deleting, refresh the list
-        } catch (error) {
-            console.error('Error deleting menu item:', error);
+    const getSubcategories = () => {
+        const categoryData = getCategoryData();
+        return categoryData ? categoryData.subcategories : [];
+    };
+
+    const getUnits = () => {
+        if (menuItem.category === 'Other') {
+            return allUnits;
         }
+        const categoryData = getCategoryData();
+        return categoryData ? categoryData.units : [];
     };
 
+    useEffect(() => {
 
-const clearForm = () => {
-        setMenuItem({
-            name: '',
-            description: '',
-            price: '',
-            quantity: '',
-            category: '',
-            availabilityStatus: true,
-            imageUrl: '',
-            unitOfMeasurement: '',
-            allergenInformation: '',
-            size: '',
-            expiryDate: '',
-            specialInstructions: '',
-            bakedGoodsType: ''
-        });
-        setIsEditing(false);
-        setEditItemId(null);
-    };
+        fetchUserData();
 
+    }, [userId, userType]);
 
-   const handleEditItem = (item) => {
-    console.log('item..!!',item)
-        setMenuItem(item);
-        setIsEditing(true);
-        setEditItemId(item.id);
-    };
-
-    const handleUpdateItem = async (e) => {
-        e.preventDefault();
-        const token = localStorage.getItem('token');
-
-        try {
-            const response = await fetch('http://localhost:5000/graphql', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    query: `
-                        mutation UpdateMenuItem($id: ID!, $input: MenuItemInput!) {
-                            updateMenuItem(id: $id, input: $input) {
-                                id
-                                itemId
-                                name
-                                description
-                                price
-                                quantity
-                                category
-                                availabilityStatus
-                                imageUrl
-                                unitOfMeasurement
-                                allergenInformation
-                                bakedGoodsType
-                            }
-                        }
-                    `,
-                    variables: {
-                        id: editItemId,
-                        input: {  
-                             name: menuItem.name,
-                            description: menuItem.description,
-                            price: parseFloat(menuItem.price), 
-                            quantity: parseInt(menuItem.quantity, 10),
-                            category: menuItem.category,
-                            availabilityStatus: menuItem.availabilityStatus,
-                            imageUrl: menuItem.imageUrl,
-                            unitOfMeasurement: menuItem.unitOfMeasurement,
-                            allergenInformation: menuItem.allergenInformation,
-                            bakedGoodsType: menuItem.bakedGoodsType}
-                    },
-                }),
-            });
-
-            const result = await response.json();
-            console.log('result...!!',result)
-             if (result.data && result.data.updateMenuItem) {
-            setMenuItems(prevItems =>
-                prevItems.map(item =>
-                    item.id === editItemId ? result.data.updateMenuItem : item
-                )
-            );
-            clearForm();
-        } else {
-            console.error('Error response:', result.errors);
-        }
-        } catch (error) {
-            console.error('Error updating menu item:', error);
-        }
-    };
 
     return (
         <div>
-            <h1>Menu Management for {businessInfo.businessType}</h1>
-            <h2>Business ID: {businessInfo.businessId}</h2>
-            <form onSubmit={isEditing ? handleUpdateItem : handleSubmit}>
+            <h2>{menuItem._id ? 'Edit Menu Item' : 'Add New Menu Item'}</h2>
+            <form onSubmit={handleSubmit}>
                 <div>
-                    <label>
-                        Menu Item Name:
-                        <input
-                            type="text"
-                            value={menuItem.name}
-                            onChange={(e) => setMenuItem({ ...menuItem, name: e.target.value })}
-                            required
-                        />
-                    </label>
+                    <label>Name:</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={menuItem.name}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Description:</label>
+                    <textarea
+                        name="description"
+                        value={menuItem.description}
+                        onChange={handleChange}
+                    ></textarea>
+                </div>
+                <div>
+                    <label>Price:</label>
+                    <input
+                        type="number"
+                        name="price"
+                        value={menuItem.price}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Quantity:</label>
+                    <input
+                        type="number"
+                        name="quantity"
+                        value={menuItem.quantity}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Category:</label>
+                    <select
+                        name="category"
+                        value={menuItem.category}
+                        onChange={handleCategoryChange}
+                        required
+                    >
+                        <option value="">Select Category</option>
+                        {groceryStoreList.map((categoryItem, index) => (
+                            <option key={index} value={categoryItem.category}>
+                                {categoryItem.category}
+                            </option>
+                        ))}
+                        <option value="Other">Other</option> {/* Other option */}
+                    </select>
                 </div>
 
-                <div>
-                    <label>
-                        Description:
-                        <textarea
-                            value={menuItem.description}
-                            onChange={(e) => setMenuItem({ ...menuItem, description: e.target.value })}
-                            placeholder="Brief description of the item"
-                        />
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        Price:
-                        <input
-                            type="number"
-                            value={menuItem.price}
-                            onChange={(e) => setMenuItem({ ...menuItem, price: e.target.value })}
-                            required
-                        />
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        Quantity:
-                        <input
-                            type="number"
-                            value={menuItem.quantity}
-                            onChange={(e) => setMenuItem({ ...menuItem, quantity: e.target.value })}
-                            required
-                        />
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        Availability Status:
-                        <select
-                            value={menuItem.availabilityStatus}
-                            onChange={(e) => setMenuItem({ ...menuItem, availabilityStatus: e.target.value === 'true' })}
-                        >
-                            <option value={true}>In Stock</option>
-                            <option value={false}>Out of Stock</option>
-                        </select>
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        Image URL:
-                        <input
-                            type="text"
-                            value={menuItem.imageUrl}
-                            onChange={(e) => setMenuItem({ ...menuItem, imageUrl: e.target.value })}
-                            placeholder="URL for the menu item image"
-                        />
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        Unit of Measurement:
-                        <input
-                            type="text"
-                            value={menuItem.unitOfMeasurement}
-                            onChange={(e) => setMenuItem({ ...menuItem, unitOfMeasurement: e.target.value })}
-                            placeholder="e.g., kg, lbs, each"
-                        />
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        Allergen Information:
-                        <textarea
-                            value={menuItem.allergenInformation}
-                            onChange={(e) => setMenuItem({ ...menuItem, allergenInformation: e.target.value })}
-                            placeholder="Any allergen information"
-                        />
-                    </label>
-                </div>
-
-                {businessInfo.businessType === 'bakery' && (
+                {/* Show input for custom category if "Other" is selected */}
+                {menuItem.category === 'Other' && (
                     <div>
-                        <label>
-                            Baked Goods Type:
-                            <input
-                                type="text"
-                                value={menuItem.bakedGoodsType}
-                                onChange={(e) => setMenuItem({ ...menuItem, bakedGoodsType: e.target.value })}
-                                placeholder="Type of baked goods (e.g., bread, cake)"
-                                required
-                            />
-                        </label>
+                        <label>Custom Category:</label>
+                        <input
+                            type="text"
+                            name="customCategory"
+                            value={menuItem.customCategory}
+                            onChange={handleChange}
+                        />
                     </div>
                 )}
 
                 <div>
-                    <label>
-                        Category:
-                        <select
-                            value={menuItem.category}
-                            onChange={(e) => setMenuItem({ ...menuItem, category: e.target.value })}
-                            required
-                        >
-                            <option value="">Select a category</option>
-                            {categories[businessInfo.businessType]?.map((category) => (
-                                <option key={category} value={category}>
-                                    {category}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                    <label>Subcategory:</label>
+                    <select
+                        name="subcategory"
+                        value={menuItem.subcategory}
+                        onChange={handleSubcategoryChange}
+                        required
+                    >
+                        <option value="">Select Subcategory</option>
+                        {getSubcategories().map((subcategory, index) => (
+                            <option key={index} value={subcategory}>
+                                {subcategory}
+                            </option>
+                        ))}
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
 
-                {/* Other fields can be conditionally rendered based on businessType as needed */}
+                {menuItem.subcategory === 'Other' && (
+                    <div>
+                        <label>Custom Subcategories (comma separated):</label>
+                        <input
+                            type="text"
+                            name="customSubcategories"
+                            value={menuItem.customSubcategories}
+                            onChange={handleCustomSubcategoryChange}
+                        />
+                    </div>
+                )}
 
                 <div>
-                <button type="submit">{isEditing ? 'Update Menu Item' : 'Add Menu Item'}</button>
+                    <label>Unit of Measurement:</label>
+                    <select
+                        name="unitOfMeasurement"
+                        value={menuItem.unitOfMeasurement}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">Select Unit</option>
+                        {getUnits().map((unit, index) => (
+                            <option key={index} value={unit}>
+                                {unit}
+                            </option>
+                        ))}
+                    </select>
                 </div>
+                <div>
+                    <label>Allergen Information:</label>
+                    <input
+                        type="text"
+                        name="allergenInformation"
+                        value={menuItem.allergenInformation}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div>
+                    <label>Image URL:</label>
+                    <input
+                        type="text"
+                        name="imageItem"
+                        value={menuItem.imageItem}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div>
+                    <label>Discount:</label>
+                    <input
+                        type="number"
+                        name="discount"
+                        value={menuItem.discount}
+                        onChange={handleChange}
+                        min="0"
+                        max="100"
+                    />
+                </div>
+                <div>
+                    <label>Featured:</label>
+                    <input
+                        type="checkbox"
+                        name="featured"
+                        checked={menuItem.featured}
+                        onChange={(e) =>
+                            setMenuItem({ ...menuItem, featured: e.target.checked })
+                        }
+                    />
+                </div>
+                <div>
+                    <label>Availability Status:</label>
+                    <input
+                        type="checkbox"
+                        name="stockStatus"
+                        checked={menuItem.stockStatus}
+                        onChange={handleCheckboxChange}
+                    />
+                </div>
+
+                <button type="submit">
+                    {menuItem._id ? 'Update' : 'Add'} Menu Item
+                </button>
             </form>
 
             <h2>Menu Items</h2>
-            <table border="1" style={{ width: '100%', textAlign: 'left' }}>
-        <thead>
-          <tr>
-            <th>Item ID</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Availability Status</th>
-            <th>Image</th>
-            <th>Unit of Measurement</th>
-            <th>Allergen Information</th>
-            <th>Baked Goods Type</th>
-            <th>Category</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {menuItems.map((item) => (
-            <tr key={item.itemId}>
-              <td>{item.itemId}</td>
-              <td>{item.name}</td>
-              <td>{item.description}</td>
-              <td>{item.price}</td>
-              <td>{item.quantity}</td>
-              <td>{item.availabilityStatus ? 'Available' : 'Unavailable'}</td>
-              <td>
-                {/* Display image if available */}
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} width="50" height="50" />
-                ) : (
-                  'No Image'
-                )}
-              </td>
-              <td>{item.unitOfMeasurement}</td>
-              <td>{item.allergenInformation || 'N/A'}</td>
-              <td>{item.bakedGoodsType || 'N/A'}</td>
-              <td>{item.category}</td>
-              <td>
-                 <button onClick={() => handleEditItem(item)}>Edit</button>
-                <button onClick={() => handleDelete(item.itemId)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            <table border="1">
+                <thead>
+                    <tr>
+                    <th>Item ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Stock Status</th>
+                        <th>Image</th>
+                        <th>Unit of Measurement</th>
+                        <th>Allergen Info</th>
+                        <th>Category</th>
+                        <th>Subcategory</th>
+                        <th>Featured</th>
+                        <th>Discount</th>
+                        <th>Approval Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {Array.isArray(menuItems) && menuItems.length > 0 ? (
+                        menuItems.map((item) => (
+                            <tr key={item.id}>
+                                <td>{item.itemId}</td>
+                                <td>{item.name}</td>
+                                <td>{item.description}</td>
+                                <td>{item.price}</td>
+                                <td>{item.quantity}</td>
+                                <td>{item.stockStatus ?'Available':'UnAvailable'}</td>
+                                <td><img src={item.imageItem} alt={item.name} width="100" height="100" /></td>
+                                <td>{item.unitOfMeasurement}</td>
+                                <td>{item.allergenInformation}</td>
+                                <td>{item.category}</td>
+                                <td>{item.subcategory}</td>
+                                <td>{item.featured ? 'Yes' : 'No'}</td>
+                                <td>{item.discount}</td>
+                                <td>{item.adminApprovalStatus ? 'Approved' : 'Pending'}</td>
+                                <td>
+                                    <button onClick={() => handleEdit(item.id)}>Edit</button>
+                                    <button onClick={() => handleDelete(item.id)}>Delete</button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan="14">No menu items available</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+
+
         </div>
     );
 }

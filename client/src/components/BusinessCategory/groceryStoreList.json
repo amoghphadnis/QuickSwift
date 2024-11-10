@@ -1,0 +1,377 @@
+[
+  {
+    "category": "Fruits & Vegetables",
+    "units": ["kg", "g", "piece"],
+    "subcategories": [
+      "Fresh Fruits",
+      "Fresh Vegetables",
+      "Organic Produce",
+      "Pre-Cut Vegetables"
+    ]
+  },
+  {
+    "category": "Frozen Food",
+    "units": ["kg", "g", "piece"],
+    "subcategories": [
+      "Frozen Meals",
+      "Frozen Vegetables",
+      "Frozen Fruits",
+      "Frozen Meat & Seafood",
+      "Frozen Snacks",
+      "Frozen Pizza"
+    ]
+  },
+  {
+    "category": "Dairy & Eggs",
+    "units": ["litre", "kg", "piece"],
+    "subcategories": [
+      "Milk",
+      "Cheese",
+      "Butter & Margarine",
+      "Yogurt",
+      "Eggs",
+      "Cream & Sour Cream"
+    ]
+  },
+  {
+    "category": "Bakery",
+    "units": ["piece", "kg", "pack"],
+    "subcategories": [
+      "Fresh Breads",
+      "Cakes & Pastries",
+      "Cookies & Crackers",
+      "Muffins & Bagels",
+      "Pies & Tarts"
+    ]
+  },
+  {
+    "category": "Snacks & Candy",
+    "units": ["g", "kg", "pack"],
+    "subcategories": [
+      "Chips & Crisps",
+      "Chocolate & Candy",
+      "Nuts & Dried Fruits",
+      "Popcorn",
+      "Granola Bars"
+    ]
+  },
+  {
+    "category": "Pantry & Groceries",
+    "units": ["kg", "g", "piece", "pack"],
+    "subcategories": [
+      "Rice & Grains",
+      "Pasta & Noodles",
+      "Canned Goods",
+      "Baking Ingredients",
+      "Sauces & Condiments",
+      "Spices & Seasonings"
+    ]
+  },
+  {
+    "category": "Trending Products",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Seasonal Items",
+      "New Arrivals",
+      "Bestsellers",
+      "Limited Edition"
+    ]
+  },
+  {
+    "category": "Beverages",
+    "units": ["litre", "ml", "pack"],
+    "subcategories": [
+      "Soft Drinks",
+      "Water",
+      "Juice",
+      "Tea & Coffee",
+      "Energy Drinks"
+    ]
+  },
+  {
+    "category": "Meat, Seafood & Alternatives",
+    "units": ["kg", "g", "piece"],
+    "subcategories": [
+      "Fresh Meat",
+      "Frozen Meat",
+      "Seafood",
+      "Plant-Based Meat Alternatives",
+      "Sausages & Hot Dogs"
+    ]
+  },
+  {
+    "category": "Deli & Fresh Prepared Meals",
+    "units": ["piece", "pack", "kg"],
+    "subcategories": [
+      "Sandwiches",
+      "Salads",
+      "Ready-to-Eat Meals",
+      "Cold Cuts",
+      "Cheese Platters"
+    ]
+  },
+  {
+    "category": "Household Supplies",
+    "units": ["piece", "pack", "set"],
+    "subcategories": [
+      "Cleaning Products",
+      "Paper Products",
+      "Trash Bags & Liners",
+      "Air Fresheners",
+      "Pest Control"
+    ]
+  },
+  {
+    "category": "Seasonal",
+    "units": ["piece", "set", "pack"],
+    "subcategories": [
+      "Holiday Decorations",
+      "Seasonal Gifts",
+      "Outdoor Furniture",
+      "Halloween & Christmas Items",
+      "Winter Essentials"
+    ]
+  },
+  {
+    "category": "Drinks",
+    "units": ["litre", "ml", "pack"],
+    "subcategories": [
+      "Soft Drinks",
+      "Juice & Smoothies",
+      "Alcoholic Beverages",
+      "Tea & Coffee",
+      "Energy & Sports Drinks"
+    ]
+  },
+  {
+    "category": "Pantry Food",
+    "units": ["kg", "g", "piece", "pack"],
+    "subcategories": [
+      "Canned & Jarred Food",
+      "Sauces & Condiments",
+      "Breakfast Foods",
+      "Spices & Seasonings",
+      "Grains & Pulses"
+    ]
+  },
+  {
+    "category": "Personal Care & Beauty",
+    "units": ["piece", "pack"],
+    "subcategories": [
+      "Skincare",
+      "Hair Care",
+      "Makeup",
+      "Fragrances",
+      "Oral Care"
+    ]
+  },
+  {
+    "category": "Appliances",
+    "units": ["piece"],
+    "subcategories": [
+      "Kitchen Appliances",
+      "Personal Care Appliances",
+      "Vacuum Cleaners",
+      "Air Purifiers",
+      "Home Appliances"
+    ]
+  },
+  {
+    "category": "Health",
+    "units": ["piece", "pack", "bottle"],
+    "subcategories": [
+      "Vitamins & Supplements",
+      "Pain Relief",
+      "First Aid",
+      "Wellness Products",
+      "Personal Care"
+    ]
+  },
+  {
+    "category": "Home",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Furniture",
+      "Home Decor",
+      "Bedding",
+      "Storage & Organization",
+      "Lighting"
+    ]
+  },
+  {
+    "category": "Electronics",
+    "units": ["piece"],
+    "subcategories": [
+      "Mobile Phones & Accessories",
+      "Smartphones",
+      "Laptops & Computers",
+      "Smart TVs",
+      "Headphones & Earbuds"
+    ]
+  },
+  {
+    "category": "Toys & Games",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Action Figures",
+      "Board Games",
+      "Puzzles",
+      "Outdoor Toys",
+      "Dolls & Stuffed Animals"
+    ]
+  },
+  {
+    "category": "Baby",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Baby Food & Formula",
+      "Baby Gear",
+      "Baby Clothing",
+      "Diapers & Wipes",
+      "Baby Toys"
+    ]
+  },
+  {
+    "category": "International Foods",
+    "units": ["kg", "g", "piece"],
+    "subcategories": [
+      "Asian Foods",
+      "Latin Foods",
+      "European Foods",
+      "Middle Eastern Foods",
+      "African Foods"
+    ]
+  },
+  {
+    "category": "Pets",
+    "units": ["kg", "g", "piece"],
+    "subcategories": [
+      "Dog Food & Supplies",
+      "Cat Food & Supplies",
+      "Pet Toys",
+      "Pet Beds & Furniture",
+      "Pet Grooming"
+    ]
+  },
+  {
+    "category": "Beauty",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Hair Care",
+      "Makeup",
+      "Skin Care",
+      "Fragrances",
+      "Nail Care"
+    ]
+  },
+  {
+    "category": "Sports & Outdoors",
+    "units": ["piece", "set", "kg"],
+    "subcategories": [
+      "Outdoor Gear",
+      "Fitness Equipment",
+      "Sports Clothing",
+      "Camping & Hiking",
+      "Bikes & Accessories"
+    ]
+  },
+  {
+    "category": "Clothes & Accessories",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Men's Clothing",
+      "Women's Clothing",
+      "Children's Clothing",
+      "Shoes & Footwear",
+      "Accessories"
+    ]
+  },
+  {
+    "category": "Bathroom & Kitchen",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Bathroom Accessories",
+      "Kitchen Accessories",
+      "Cleaning Tools",
+      "Sink & Faucets",
+      "Shower Curtains"
+    ]
+  },
+  {
+    "category": "Toys",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Action Figures",
+      "Dolls & Stuffed Animals",
+      "Puzzles",
+      "Board Games",
+      "Educational Toys"
+    ]
+  },
+  {
+    "category": "Furniture",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Living Room Furniture",
+      "Bedroom Furniture",
+      "Office Furniture",
+      "Storage & Organization",
+      "Outdoor Furniture"
+    ]
+  },
+  {
+    "category": "Office & Stationery",
+    "units": ["piece", "pack"],
+    "subcategories": [
+      "Office Supplies",
+      "Desk & Chairs",
+      "School Supplies",
+      "Paper & Notebooks",
+      "Writing Instruments"
+    ]
+  },
+  {
+    "category": "Home Improvement",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Tools & Hardware",
+      "Electrical & Lighting",
+      "Paint & Supplies",
+      "Plumbing",
+      "Building Materials"
+    ]
+  },
+  {
+    "category": "Automotive",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Car Accessories",
+      "Car Care",
+      "Tires & Wheels",
+      "Motorcycle Accessories",
+      "Tools & Equipment"
+    ]
+  },
+  {
+    "category": "Home Health Care",
+    "units": ["piece", "set"],
+    "subcategories": [
+      "Mobility Aids",
+      "Daily Living Aids",
+      "Medical Supplies",
+      "Home Diagnostics",
+      "Therapeutic & Massage"
+    ]
+  },
+  {
+    "category": "Gifts & Holidays",
+    "units": ["piece", "pack", "set"],
+    "subcategories": [
+      "Holiday Gifts",
+      "Birthday Gifts",
+      "Gifts for Her",
+      "Gifts for Him",
+      "Gift Cards"
+    ]
+  }
+]

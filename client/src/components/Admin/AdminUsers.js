@@ -63,7 +63,7 @@ const AdminUsers = () => {
                       businessLocation {
                         address
                         city
-                        postalCode
+                        postalcode
                       }
                     }
                   }
@@ -221,7 +221,7 @@ const AdminUsers = () => {
                       <Typography variant="body2">Type: {user.businessInfo.businessType}</Typography>
                       <Typography variant="body2">
                         Location: {user.businessInfo.businessLocation.address}, {user.businessInfo.businessLocation.city},{' '}
-                        {user.businessInfo.businessLocation.postalCode}
+                        {user.businessInfo.businessLocation.postalcode}
                       </Typography>
                     </Box>
                   )}
