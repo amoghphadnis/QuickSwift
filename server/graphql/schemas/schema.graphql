@@ -101,19 +101,23 @@ input LocationInput {
 }
 
 input MenuItemInput {
-    id:Int
-    itemId:String
+   id: Int
+    itemId: String
     name: String
     description: String
     price: Float
     quantity: Int
     category: String
-    availabilityStatus: Boolean
-    imageUrl: String
     unitOfMeasurement: String
     allergenInformation: String
-    bakedGoodsType: String
+    stockStatus: Boolean         
+    imageItem: String            
+    businessId: String           
+    featured: Boolean             
+    discount: Float              
+    subcategory: String  
 }
+
 
 
 input OpeningHourInput {

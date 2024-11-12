@@ -6,6 +6,8 @@ function MenuManagementComponent() {
     const { userType, userId } = useContext(UserContext);
     const [allUnits, setAllUnits] = useState([]);
     const [menuItems, setMenuItems] = useState([]);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editItemId, setEditItemId] = useState(null);
 
     const [menuItem, setMenuItem] = useState({
         name: '',
@@ -22,7 +24,7 @@ function MenuManagementComponent() {
         discount: 0,
         stockStatus: true,
         customCategory: '',
-        customSubcategories: []
+        customSubcategories: ''
     });
 
     const [businessInfo, setBusinessInfo] = useState({
@@ -127,11 +129,57 @@ function MenuManagementComponent() {
 
             // Update the state with the fetched menu items
             setMenuItems(result.data.getMenuItems);
+            const categoriesFromMenu = result.data.getMenuItems
+            .map(item => item.category)
+            .filter(category => !groceryStoreList.some(existingItem => existingItem.category === category));
+        
+            const subcategoriesFromMenu = result.data.getMenuItems
+            .map(item => item.subcategory)
+            .filter(subcategory => {
+                // Check if subcategory exists in any of the groceryStoreList items
+                return !groceryStoreList.some(existingItem => existingItem.subcategories.includes(subcategory));
+            });
+
+            // Update groceryStoreList with new categories and subcategories
+            if (categoriesFromMenu.length > 0 || subcategoriesFromMenu.length > 0) {
+                updateGroceryStoreList(categoriesFromMenu, subcategoriesFromMenu);
+            }
         } catch (error) {
             console.error('Error fetching menu items:', error);
         }
 
     }
+
+
+    const updateGroceryStoreList = (newCategories, newSubcategories) => {
+        console.log('newCategories...!!', newCategories);
+        console.log('newSubcategories...!!', newSubcategories);
+    
+        // Add new categories if not already in groceryStoreList
+        newCategories.forEach(category => {
+            // Check if the category already exists in the groceryStoreList
+            if (!groceryStoreList.some(item => item.category === category)) {
+                // If not, add it with empty subcategories and default units
+                groceryStoreList.push({ category, subcategories: [], units: [...new Set(groceryStoreList.flatMap(item => item.units))] });
+            }
+        });
+    
+        // Add new subcategories to existing categories or create new ones
+        groceryStoreList.forEach(item => {
+            // Only add subcategories to items where the category exists in the new categories
+            if (newCategories.includes(item.category)) {
+                newSubcategories.forEach(subcategory => {
+                    // Add the subcategory if it's not already in the subcategories array
+                    if (!item.subcategories.includes(subcategory)) {
+                        item.subcategories.push(subcategory);
+                    }
+                });
+            }
+        });
+    
+        console.log('Updated groceryStoreList...!!', groceryStoreList);
+    };
+    
     // Handle form field changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -173,7 +221,7 @@ function MenuManagementComponent() {
         const { value } = e.target;
         setMenuItem((prevState) => ({
             ...prevState,
-            customSubcategories: value.split(',').map(sub => sub.trim()) // Split by comma for multiple subcategories
+            customSubcategories: value // Split by comma for multiple subcategories
         }));
     };
 
@@ -187,15 +235,150 @@ function MenuManagementComponent() {
     };
 
 
-    const handleEdit = (id) => {
-        console.log('Edit menu item with ID:', id);
+    const handleEdit = (item) => {
+        console.log('item..!!',item)
+        setMenuItem(item);
+        setIsEditing(true);
+        setEditItemId(item.id);
         
     };
 
+
+    const clearForm = () => {
+        setMenuItem({
+            name: '',
+            description: '',
+            price: '',
+            quantity: '',
+            category: '',
+            subcategory: '',
+            unitOfMeasurement: '',
+            allergenInformation: '',
+            imageItem: '',
+            businessId: userId,
+            featured: false,
+            discount: 0,
+            stockStatus: true,
+            customCategory: '',
+            customSubcategories: ''
+        });
+        setIsEditing(false);
+        setEditItemId(null);
+    };
+
+
+    const handleUpdateItem = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+    
+        try {
+            const response = await fetch('http://localhost:5000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+                        mutation UpdateMenuItem($id: ID!, $input: MenuItemInput!) {
+                            updateMenuItem(id: $id, input: $input) {
+                                id
+                                itemId
+                                name
+                                description
+                                price
+                                quantity
+                                category
+                                unitOfMeasurement
+                                allergenInformation
+                                stockStatus
+                                imageItem
+                                businessId
+                                featured
+                                discount
+                                subcategory
+                            }
+                        }
+                    `,
+                    variables: {
+                        id: editItemId,
+                        input: {  
+                            name: menuItem.name,
+                            description: menuItem.description,
+                            price: parseFloat(menuItem.price),
+                            quantity: parseInt(menuItem.quantity, 10),
+                            category: menuItem.category === 'Other' ? menuItem.customCategory : menuItem.category,
+                            unitOfMeasurement: menuItem.unitOfMeasurement,
+                            allergenInformation: menuItem.allergenInformation,
+                            stockStatus: menuItem.stockStatus,
+                            imageItem: menuItem.imageItem,
+                            businessId: businessInfo.id,
+                            featured: menuItem.featured,
+                            discount: parseFloat(menuItem.discount),
+                            subcategory: menuItem.subcategory === 'Other' ? menuItem.customSubcategories : menuItem.subcategory,
+                        }
+                    },
+                }),
+            });
+    
+            const result = await response.json();
+            console.log('result:', result);
+            
+            if (result.data && result.data.updateMenuItem) {
+                setMenuItems(prevItems =>
+                    prevItems.map(item =>
+                        item.id === editItemId ? result.data.updateMenuItem : item
+                    )
+                );
+                clearForm();
+            } else {
+                console.error('Error response:', result.errors);
+            }
+        } catch (error) {
+            console.error('Error updating menu item:', error);
+        }
+    };
+    
+
+
     // Function to handle delete action
-    const handleDelete = (id) => {
-        console.log('Delete menu item with ID:', id);
-       
+    const handleDelete = async (itemId) => {
+        console.log('itemId...!!',itemId)
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('http://localhost:5000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+                        mutation DeleteMenuItem($itemId: String!) {
+                            deleteMenuItem(itemId: $itemId) {
+                                success
+                                message
+                            }
+                        }
+                    `,
+                    variables: { itemId }
+                })
+            });
+
+            const result = await response.json();
+            console.log('result..delete..!!',result)
+            console.log('businessInfo..!!',businessInfo)
+            if (result.errors) {
+                throw new Error(result.errors[0].message);
+            }
+           if(result.data.deleteMenuItem.success === true){
+               console.log('message...',result.message)
+               fetchMenuItems(businessInfo.id)
+           }
+            // After deleting, refresh the list
+        } catch (error) {
+            console.error('Error deleting menu item:', error);
+        }
     };
 
 
@@ -306,13 +489,17 @@ function MenuManagementComponent() {
     // Get the list of subcategories for the selected category
     // Get the list of subcategories and units for the selected category
     const getCategoryData = () => {
+        console.log('category...!!',menuItem.category)
         return groceryStoreList.find((item) => item.category === menuItem.category);
     };
 
     const getSubcategories = () => {
         const categoryData = getCategoryData();
+        console.log('categoryData...!!',categoryData)
+
         return categoryData ? categoryData.subcategories : [];
     };
+ 
 
     const getUnits = () => {
         if (menuItem.category === 'Other') {
@@ -331,8 +518,8 @@ function MenuManagementComponent() {
 
     return (
         <div>
-            <h2>{menuItem._id ? 'Edit Menu Item' : 'Add New Menu Item'}</h2>
-            <form onSubmit={handleSubmit}>
+            <h2>{isEditing ? 'Edit Menu Item' : 'Add New Menu Item'}</h2>
+            <form onSubmit={isEditing ? handleUpdateItem : handleSubmit}>
                 <div>
                     <label>Name:</label>
                     <input
@@ -499,7 +686,7 @@ function MenuManagementComponent() {
                 </div>
 
                 <button type="submit">
-                    {menuItem._id ? 'Update' : 'Add'} Menu Item
+                <button type="submit">{isEditing ? 'Update Menu Item' : 'Add Menu Item'}</button>
                 </button>
             </form>
 
@@ -543,8 +730,8 @@ function MenuManagementComponent() {
                                 <td>{item.discount}</td>
                                 <td>{item.adminApprovalStatus ? 'Approved' : 'Pending'}</td>
                                 <td>
-                                    <button onClick={() => handleEdit(item.id)}>Edit</button>
-                                    <button onClick={() => handleDelete(item.id)}>Delete</button>
+                                    <button onClick={() => handleEdit(item)}>Edit</button>
+                                    <button onClick={() => handleDelete(item.itemId)}>Delete</button>
                                 </td>
                             </tr>
                         ))
