@@ -68,7 +68,7 @@ type MenuItem {
     category: String!
     subcategory: String
     price: Float!
-    quantity: Int!
+    quantity: Int
     stockStatus: Boolean!
     unitOfMeasurement: String
     allergenInformation: String
@@ -175,7 +175,7 @@ register(
         name: String!,
         description: String,
         price: Float!,
-        quantity: Int!,
+        quantity: Int,
         stockStatus: Boolean!,
         imageItem: String,
         unitOfMeasurement: String,

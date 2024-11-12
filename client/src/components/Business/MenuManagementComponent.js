@@ -8,6 +8,8 @@ function MenuManagementComponent() {
     const [menuItems, setMenuItems] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [editItemId, setEditItemId] = useState(null);
+    const [categoryList, setCategoryList] = useState([]); 
+
 
     const [menuItem, setMenuItem] = useState({
         name: '',
@@ -122,28 +124,35 @@ function MenuManagementComponent() {
             });
 
             const result = await response.json();
-         console.log('getmenu...!!',result);
+            console.log('getmenu...!!', result);
             if (result.errors) {
                 throw new Error(result.errors[0].message);
             }
 
             // Update the state with the fetched menu items
             setMenuItems(result.data.getMenuItems);
+            if (businessInfo.businessType === 'grocery') {
             const categoriesFromMenu = result.data.getMenuItems
-            .map(item => item.category)
-            .filter(category => !groceryStoreList.some(existingItem => existingItem.category === category));
-        
+                .map(item => item.category)
+                .filter(category => !groceryStoreList.some(existingItem => existingItem.category === category));
+
             const subcategoriesFromMenu = result.data.getMenuItems
-            .map(item => item.subcategory)
-            .filter(subcategory => {
-                // Check if subcategory exists in any of the groceryStoreList items
-                return !groceryStoreList.some(existingItem => existingItem.subcategories.includes(subcategory));
-            });
+                .map(item => item.subcategory)
+                .filter(subcategory => {
+                    // Check if subcategory exists in any of the groceryStoreList items
+                    return !groceryStoreList.some(existingItem => existingItem.subcategories.includes(subcategory));
+                });
 
             // Update groceryStoreList with new categories and subcategories
             if (categoriesFromMenu.length > 0 || subcategoriesFromMenu.length > 0) {
                 updateGroceryStoreList(categoriesFromMenu, subcategoriesFromMenu);
             }
+        }else{
+            const uniqueCategories = Array.from(
+                new Set(result.data.getMenuItems.map(item => item.category))
+            ).map(category => ({ category })); 
+            setCategoryList(uniqueCategories);
+        }
         } catch (error) {
             console.error('Error fetching menu items:', error);
         }
@@ -152,9 +161,6 @@ function MenuManagementComponent() {
 
 
     const updateGroceryStoreList = (newCategories, newSubcategories) => {
-        console.log('newCategories...!!', newCategories);
-        console.log('newSubcategories...!!', newSubcategories);
-    
         // Add new categories if not already in groceryStoreList
         newCategories.forEach(category => {
             // Check if the category already exists in the groceryStoreList
@@ -163,7 +169,7 @@ function MenuManagementComponent() {
                 groceryStoreList.push({ category, subcategories: [], units: [...new Set(groceryStoreList.flatMap(item => item.units))] });
             }
         });
-    
+
         // Add new subcategories to existing categories or create new ones
         groceryStoreList.forEach(item => {
             // Only add subcategories to items where the category exists in the new categories
@@ -176,10 +182,9 @@ function MenuManagementComponent() {
                 });
             }
         });
-    
-        console.log('Updated groceryStoreList...!!', groceryStoreList);
+
     };
-    
+
     // Handle form field changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -227,7 +232,7 @@ function MenuManagementComponent() {
 
     // Handle checkbox toggle for availability status
     const handleCheckboxChange = (e) => {
-        console.log('checked..!!',e.target.checked)
+        console.log('checked..!!', e.target.checked)
         setMenuItem((prevState) => ({
             ...prevState,
             stockStatus: e.target.checked,
@@ -236,11 +241,11 @@ function MenuManagementComponent() {
 
 
     const handleEdit = (item) => {
-        console.log('item..!!',item)
+        console.log('item..!!', item)
         setMenuItem(item);
         setIsEditing(true);
         setEditItemId(item.id);
-        
+
     };
 
 
@@ -270,7 +275,7 @@ function MenuManagementComponent() {
     const handleUpdateItem = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-    
+
         try {
             const response = await fetch('http://localhost:5000/graphql', {
                 method: 'POST',
@@ -302,7 +307,7 @@ function MenuManagementComponent() {
                     `,
                     variables: {
                         id: editItemId,
-                        input: {  
+                        input: {
                             name: menuItem.name,
                             description: menuItem.description,
                             price: parseFloat(menuItem.price),
@@ -320,10 +325,10 @@ function MenuManagementComponent() {
                     },
                 }),
             });
-    
+
             const result = await response.json();
             console.log('result:', result);
-            
+
             if (result.data && result.data.updateMenuItem) {
                 setMenuItems(prevItems =>
                     prevItems.map(item =>
@@ -338,12 +343,12 @@ function MenuManagementComponent() {
             console.error('Error updating menu item:', error);
         }
     };
-    
+
 
 
     // Function to handle delete action
     const handleDelete = async (itemId) => {
-        console.log('itemId...!!',itemId)
+        console.log('itemId...!!', itemId)
         const token = localStorage.getItem('token');
         try {
             const response = await fetch('http://localhost:5000/graphql', {
@@ -366,15 +371,14 @@ function MenuManagementComponent() {
             });
 
             const result = await response.json();
-            console.log('result..delete..!!',result)
-            console.log('businessInfo..!!',businessInfo)
+
             if (result.errors) {
                 throw new Error(result.errors[0].message);
             }
-           if(result.data.deleteMenuItem.success === true){
-               console.log('message...',result.message)
-               fetchMenuItems(businessInfo.id)
-           }
+            if (result.data.deleteMenuItem.success === true) {
+                console.log('message...', result.message)
+                fetchMenuItems(businessInfo.id)
+            }
             // After deleting, refresh the list
         } catch (error) {
             console.error('Error deleting menu item:', error);
@@ -385,7 +389,6 @@ function MenuManagementComponent() {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('menuItem.....!!',menuItem)
         const token = localStorage.getItem('token');
         if (!token) {
             throw new Error('No token found. Please log in.');
@@ -404,13 +407,13 @@ function MenuManagementComponent() {
                         $name: String!,
                         $description: String,
                         $price: Float!,
-                        $quantity: Int!,
+                        $quantity: Int,
                         $stockStatus: Boolean!,
                         $imageItem: String,
                         $unitOfMeasurement: String,
                         $allergenInformation: String,
                         $category: String!,
-                        $subcategory:String!,
+                        $subcategory:String,
                         $businessId: ID!,
                         $featured: Boolean,
                         $discount: Float,
@@ -442,7 +445,7 @@ function MenuManagementComponent() {
                         name: menuItem.name,
                         description: menuItem.description,
                         price: parseFloat(menuItem.price),
-                        quantity: parseInt(menuItem.quantity, 10),
+                        quantity: parseInt(menuItem.quantity || '0', 10),
                         stockStatus: menuItem.stockStatus,
                         imageItem: menuItem.imageItem,
                         unitOfMeasurement: menuItem.unitOfMeasurement,
@@ -486,20 +489,33 @@ function MenuManagementComponent() {
         }
     };
 
-    // Get the list of subcategories for the selected category
-    // Get the list of subcategories and units for the selected category
+
+    const getFilteredCategories = () => {
+        if (businessInfo.businessType === 'grocery_store') {
+            // Return groceryStoreList directly if business type is 'grocery'
+            return groceryStoreList;
+        }else {
+            // Return hardcoded categories for other business types
+            return [
+                { category: 'Appetizers', subcategories: ['Salads', 'Soup', 'Finger Foods'] },
+                { category: 'Main Course', subcategories: ['Pasta', 'Burgers', 'Pizza'] },
+                { category: 'Desserts', subcategories: ['Cakes', 'Ice Cream', 'Pastries'] },
+                { category: 'Beverages', subcategories: ['Coffee', 'Juices', 'Smoothies'] },
+            ];
+        }
+    };
+
     const getCategoryData = () => {
-        console.log('category...!!',menuItem.category)
-        return groceryStoreList.find((item) => item.category === menuItem.category);
+        return getFilteredCategories().find((item) => item.category === menuItem.category);
     };
 
     const getSubcategories = () => {
         const categoryData = getCategoryData();
-        console.log('categoryData...!!',categoryData)
+        console.log('categoryData...!!', categoryData)
 
         return categoryData ? categoryData.subcategories : [];
     };
- 
+
 
     const getUnits = () => {
         if (menuItem.category === 'Other') {
@@ -515,6 +531,7 @@ function MenuManagementComponent() {
 
     }, [userId, userType]);
 
+  
 
     return (
         <div>
@@ -548,6 +565,7 @@ function MenuManagementComponent() {
                         required
                     />
                 </div>
+            {businessInfo.businessType === 'grocery_store' && (
                 <div>
                     <label>Quantity:</label>
                     <input
@@ -558,25 +576,36 @@ function MenuManagementComponent() {
                         required
                     />
                 </div>
+                )}
                 <div>
                     <label>Category:</label>
-                    <select
-                        name="category"
-                        value={menuItem.category}
-                        onChange={handleCategoryChange}
-                        required
-                    >
-                        <option value="">Select Category</option>
-                        {groceryStoreList.map((categoryItem, index) => (
-                            <option key={index} value={categoryItem.category}>
-                                {categoryItem.category}
-                            </option>
-                        ))}
-                        <option value="Other">Other</option> {/* Other option */}
-                    </select>
+                    {businessInfo.businessType === 'grocery_store' || menuItems.length > 0 ? (
+                        <select
+                            name="category"
+                            value={menuItem.category}
+                            onChange={handleCategoryChange}
+                            required
+                        >
+                            <option value="">Select Category</option>
+                            {(businessInfo.businessType === 'grocery_store' ? groceryStoreList : categoryList).map((categoryItem, index) => (
+                <option key={index} value={categoryItem.category}>
+                    {categoryItem.category}
+                </option>
+            ))}
+                            <option value="Other">Other</option> {/* Other option */}
+                        </select>
+                    ) : (
+                        <input
+                            type="text"
+                            name="category"
+                            placeholder="Enter Category"
+                            value={menuItem.category}
+                            onChange={handleChange}
+                            required
+                        />
+                    )}
                 </div>
 
-                {/* Show input for custom category if "Other" is selected */}
                 {menuItem.category === 'Other' && (
                     <div>
                         <label>Custom Category:</label>
@@ -588,25 +617,27 @@ function MenuManagementComponent() {
                         />
                     </div>
                 )}
-
+        {businessInfo.businessType === 'grocery_store' && (
                 <div>
                     <label>Subcategory:</label>
-                    <select
-                        name="subcategory"
-                        value={menuItem.subcategory}
-                        onChange={handleSubcategoryChange}
-                        required
-                    >
-                        <option value="">Select Subcategory</option>
-                        {getSubcategories().map((subcategory, index) => (
-                            <option key={index} value={subcategory}>
-                                {subcategory}
-                            </option>
-                        ))}
-                        <option value="Other">Other</option>
-                    </select>
+                    
+                        <select
+                            name="subcategory"
+                            value={menuItem.subcategory}
+                            onChange={handleSubcategoryChange}
+                            required
+                        >
+                            <option value="">Select Subcategory</option>
+                            {getSubcategories().map((subcategory, index) => (
+                                <option key={index} value={subcategory}>
+                                    {subcategory}
+                                </option>
+                            ))}
+                            <option value="Other">Other</option> {/* Other option */}
+                        </select>
+                   
                 </div>
-
+ )}
                 {menuItem.subcategory === 'Other' && (
                     <div>
                         <label>Custom Subcategories (comma separated):</label>
@@ -619,6 +650,8 @@ function MenuManagementComponent() {
                     </div>
                 )}
 
+
+                {businessInfo.businessType === 'grocery_store' && (
                 <div>
                     <label>Unit of Measurement:</label>
                     <select
@@ -635,6 +668,7 @@ function MenuManagementComponent() {
                         ))}
                     </select>
                 </div>
+            )}
                 <div>
                     <label>Allergen Information:</label>
                     <input
@@ -686,7 +720,7 @@ function MenuManagementComponent() {
                 </div>
 
                 <button type="submit">
-                <button type="submit">{isEditing ? 'Update Menu Item' : 'Add Menu Item'}</button>
+                    <button type="submit">{isEditing ? 'Update Menu Item' : 'Add Menu Item'}</button>
                 </button>
             </form>
 
@@ -694,7 +728,7 @@ function MenuManagementComponent() {
             <table border="1">
                 <thead>
                     <tr>
-                    <th>Item ID</th>
+                        <th>Item ID</th>
                         <th>Name</th>
                         <th>Description</th>
                         <th>Price</th>
@@ -720,7 +754,7 @@ function MenuManagementComponent() {
                                 <td>{item.description}</td>
                                 <td>{item.price}</td>
                                 <td>{item.quantity}</td>
-                                <td>{item.stockStatus ?'Available':'UnAvailable'}</td>
+                                <td>{item.stockStatus ? 'Available' : 'UnAvailable'}</td>
                                 <td><img src={item.imageItem} alt={item.name} width="100" height="100" /></td>
                                 <td>{item.unitOfMeasurement}</td>
                                 <td>{item.allergenInformation}</td>
