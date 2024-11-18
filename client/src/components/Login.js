@@ -1,11 +1,15 @@
 import React, { useState ,useContext} from 'react';
 import { useNavigate } from "react-router-dom";
-import { Box, TextField, Button, Typography, Link } from '@mui/material';
+import { Box, TextField, Button, Typography, Link,Modal} from '@mui/material';
 import { UserContext } from './context/UserContext';
 
 function Login({ userType }) {  // Receive userType as a prop
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [message, setMessage] = useState('');
+
   const navigate = useNavigate();
   const { setUserType, setUserId } = useContext(UserContext); // Access setUserType and setUserId from context
 
@@ -57,6 +61,34 @@ function Login({ userType }) {  // Receive userType as a prop
     }
   };
 
+  const handleForgotPassword = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            mutation ForgotPassword($email: String!) {
+              forgotPassword(email: $email)
+            }
+          `,
+          variables: { email: forgotEmail },
+        }),
+      });
+
+      const result = await response.json();
+      if (result.errors) {
+        setMessage(result.errors[0].message);
+      } else {
+        setMessage('Password reset email sent. Please check your inbox.');
+        setShowForgotPasswordModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage('Error sending password reset email.');
+    }
+  }
+
   return (
     <Box
       sx={{
@@ -96,7 +128,7 @@ function Login({ userType }) {  // Receive userType as a prop
         </Button>
       </form>
 
-      <Link href="#" variant="body2" sx={{ mb: 2 }}>
+      <Link onClick={() => setShowForgotPasswordModal(true)} style={{ cursor: 'pointer' }} variant="body2" sx={{ mb: 2 }}>
         Forgot Password
       </Link>
 
@@ -106,6 +138,27 @@ function Login({ userType }) {  // Receive userType as a prop
           Sign Up Now as {userType.charAt(0).toUpperCase() + userType.slice(1)}
         </Link>
       </Typography>
+
+
+      <Modal open={showForgotPasswordModal} onClose={() => setShowForgotPasswordModal(false)}>
+        <Box sx={{ padding: 4, backgroundColor: 'white', margin: 'auto', mt: 10, width: '300px' }}>
+          <Typography variant="h6">Forgot Password</Typography>
+          <TextField
+            label="Email"
+            type="email"
+            value={forgotEmail}
+            onChange={(e) => setForgotEmail(e.target.value)}
+            fullWidth
+            required
+            sx={{ mb: 2 }}
+          />
+          <Button variant="contained" onClick={handleForgotPassword} fullWidth>
+            Send Reset Email
+          </Button>
+          {message && <Typography variant="body2" sx={{ mt: 2 }}>{message}</Typography>}
+        </Box>
+      </Modal>
+
     </Box>
   );
 }

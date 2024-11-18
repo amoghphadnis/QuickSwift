@@ -7,6 +7,15 @@ import { Menu } from '../../model/Menu.js';
 import verifyAuthToken from "../../middleware/verifyAuthToken.js";
 import paypal from '@paypal/checkout-server-sdk';
 import client from '../../paypal/paypalClient.js';
+import {auth, storage,db}  from '../../firebase/firebaseConfig.js'
+import { createUserWithEmailAndPassword} from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, setDoc } from "firebase/firestore";
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import { config } from "dotenv";
+
+
 
 export const resolvers = {
   Query: {
@@ -64,20 +73,60 @@ export const resolvers = {
   },
 
   Mutation: {
-    register: async (_, { username, email, password, userType, ...rest }) => {
+    register: async (_, { username, email, password, userType,profilePicture, ...rest }) => {
       console.log('Register mutation started');
 
       // Check if the user already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) throw new Error('User already exists');
 
+
+      let profilePictureURL = null;
+      let driverId = null;
+      let businessId = null;
+      let additionalInfo=null
       // Handle user type logic based on the userType (driver or business)
-      const additionalInfo = await handleUserType(userType, rest);
-      console.log('Additional info:', additionalInfo);
+      if (userType === 'driver' || userType === 'business') {
+         additionalInfo = await handleUserType(userType, rest);
+        console.log('Additional info:', additionalInfo);
+    
+        // If the user is a driver, save the driverId
+        if (userType === 'driver') {
+          driverId = additionalInfo.driverInfo.toString(); // This is the string ID returned from MongoDB
+        }
+    
+        // If the user is a business, save the businessId
+        if (userType === 'business') {
+          businessId = additionalInfo.businessInfo.toString(); // This is the string ID returned from MongoDB
+        }
+      }
 
       // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
       
+      const firebaseUser = await createUserWithEmailAndPassword(auth, email, password)
+      .then(userCredential => userCredential.user)
+      .catch(error => { throw new Error("Firebase Auth error: " + error.message); });
+
+     
+
+      if (profilePicture) {
+        const storageRef = ref(storage, `profilePictures/${firebaseUser.uid}`);
+        const uploadResult = await uploadBytes(storageRef, profilePicture);
+        profilePictureURL = await getDownloadURL(uploadResult.ref);
+    }
+
+      const userDetails = doc(db, "UserDetails", firebaseUser.uid); 
+      await setDoc(userDetails, {
+        username,
+        email,
+        userType,
+        profilePictureURL,
+        driverInfo: driverId, 
+        businessInfo: businessId, 
+        createdAt: new Date().toISOString(),
+    });
+
       // Create the user
       const user = new User({
         username,
@@ -239,6 +288,68 @@ export const resolvers = {
         console.error("Error capturing payment:", error);
         throw new Error("Failed to capture payment");
     }
+},
+forgotPassword: async (_, { email }) => {
+  try {
+    // Send password reset email
+    const user = await User.findOne({ email });
+    if (!user) throw new Error("User not found");
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; 
+    await user.save();
+
+    const resetURL = `http://localhost:7000/reset-password/${user._id}/${resetToken}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,  
+      },
+    });
+
+    await transporter.sendMail({
+      to: user.email,
+      from: process.env.EMAIL_USER,
+      subject: "Password Reset Request",
+      text: resetURL,
+    });
+
+    console.log("Password reset email sent");
+
+    return true; // Return success
+  } catch (error) {
+    console.error("Error resetting password: ", error.message);
+    throw new Error(error.message); // Return error message to the client
+  }
+},
+resetPassword: async (_, {userId, token, newPassword }) => {
+  try {
+    // Find user by reset token and check expiration
+    const user = await User.findOne({
+      _id: userId,
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // Ensure token is not expired
+    });
+
+    if (!user) throw new Error("Invalid or expired token");
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user's password and clear reset fields
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    console.log("Password has been reset successfully");
+    return true;
+  } catch (error) {
+    console.error("Error in resetPassword:", error.message);
+    throw new Error("Failed to reset password");
+  }
 }
 
 

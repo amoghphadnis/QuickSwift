@@ -191,5 +191,7 @@ register(
     updateMenuItem(id: ID!, input: MenuItemInput!): MenuItem
     createPaymentIntent(description: String!, amount: Float!): PaymentIntent
     capturePayment(orderId: String!): PaymentIntent
+    forgotPassword(email: String!): Boolean
+    resetPassword(userId: ID!,token: String!, newPassword: String!): Boolean
 
 }

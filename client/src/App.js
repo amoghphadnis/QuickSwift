@@ -20,6 +20,7 @@ import OrdersComponent from './components/Business/OrdersComponent';
 import MenuManagementComponent from './components/Business/MenuManagementComponent';
 import ProfileComponent from './components/Business/ProfileComponent';
 import PromotionsComponent from './components/Business/PromotionsComponent';
+import ResetPassword from './components/ResetPassword';
 
 
 function App() {
@@ -66,7 +67,7 @@ function App() {
         <Route path='/business/promotions' element={<PromotionsComponent />} />
         <Route path='/business/profile' element={<ProfileComponent />} />
 
-
+        <Route path="/reset-password/:userId/:token" element={<ResetPassword />} />
 
         {/* Fallback route: Redirect any other invalid path to the homepage */}
         <Route path="*" element={<Navigate to="/login/customer" replace />} />
