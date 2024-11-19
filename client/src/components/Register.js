@@ -184,6 +184,21 @@ function Register({ userType }) {
     }
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    console.log('name..!!',name)
+    if (files) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prevData => ({
+          ...prevData,
+          [name]: reader.result, // Store the base64 string instead of the file object
+        }));
+      };
+      reader.readAsDataURL(files); // Convert the file to a base64-encoded string
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -239,14 +254,12 @@ function Register({ userType }) {
           fullWidth
           sx={{ mb: 2 }}
         />
-        <TextField
-          label="Profile Picture URL"
+       <TextField
           type="text"
           name="profilePicture"
-          value={formData.profilePicture}
+          
           onChange={handleChange}
-          fullWidth
-          sx={{ mb: 2 }}
+          style={{ marginBottom: '16px' }}
         />
 
         {userType === 'driver' && (

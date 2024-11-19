@@ -33,7 +33,8 @@ const userSchema = new Schema({
   }, // User status: 'active', 'inactive', 'pending'
   profilePicture: String, // URL to profile picture
   phoneNumber: String, // Optional: User's phone number
-  
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   // References to driver and restaurant information
   driverInfo: {
     type:Schema.Types.ObjectId,
