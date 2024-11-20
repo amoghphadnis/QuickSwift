@@ -21,6 +21,13 @@ function ReviewAndSubmit({ formData, userType }) {
               InputProps={{ readOnly: true }}
               sx={{ mb: 2 }}
             />
+            <TextField 
+            label="Business Type"
+            value={formData.businessType}
+            fullWidth
+            InputProps={{readOnly: true }}
+            sx={{ md: 2}}
+            />
             <TextField
               label="Business Address"
               value={formData.businessLocation.address}
@@ -71,6 +78,20 @@ function ReviewAndSubmit({ formData, userType }) {
             <TextField
               label="Vehicle Year"
               value={formData.vehicleYear}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="License PLate"
+              value={formData.licensePlate}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Insurance Proof"
+              value={formData.insuranceProof}
               fullWidth
               InputProps={{ readOnly: true }}
               sx={{ mb: 2 }}
