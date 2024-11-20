@@ -4,7 +4,7 @@ import Navbar from './components/Navbar';
 import TopBar from './components/TopBar';
 import Login from './components/Login';
 import Register from './components/Register';
-import Profile from './components/Profile';
+import Profile from './components/customer/ProfileComponent';
 import HomePage from './components/HomePage';  // Optional: if you want a homepage
 import CheckoutPage from './components/customer/Checkout'; // Add this import
 import OrderTrackingPage from './components/customer/OrderTracking'; // Add this import

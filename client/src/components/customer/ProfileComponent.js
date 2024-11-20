@@ -1,9 +1,8 @@
 import React ,{useContext,useEffect,useState} from 'react';
 import { useParams } from 'react-router-dom';
-import { UserContext } from '../context/UserContext'; // Import UserContext
+import { UserContext } from '../context/UserContext';
 
-
-const AdminComponent=()=>{
+const ProfileComponent=()=>{
     const { userType, userId } = useContext(UserContext);
     const [user, setUser] = useState(null);
 
@@ -86,4 +85,4 @@ const AdminComponent=()=>{
     )
 }
 
-export default AdminComponent
+export default ProfileComponent

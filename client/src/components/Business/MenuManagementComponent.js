@@ -489,7 +489,28 @@ function MenuManagementComponent() {
         }
     };
 
+    const handleFileChange = (e) => {
+        const { name, files } = e.target;
+        const maxSize = 10 * 1024 * 1024; // 10MB limit
+    
+        if (files && files[0].size > maxSize) {
+          alert('File size exceeds the maximum limit of 10MB.');
+          return;
+        }
+    
+        if (files && files[0]) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setMenuItem(prevData => ({
+              ...prevData,
+              [name]: reader.result // Store the base64 string
+            }));
+          };
+          reader.readAsDataURL(files[0]); // Convert file to base64
+        }
+      };
 
+      
     const getFilteredCategories = () => {
         if (businessInfo.businessType === 'grocery_store') {
             // Return groceryStoreList directly if business type is 'grocery'
@@ -679,13 +700,9 @@ function MenuManagementComponent() {
                     />
                 </div>
                 <div>
-                    <label>Image URL:</label>
-                    <input
-                        type="text"
-                        name="imageItem"
-                        value={menuItem.imageItem}
-                        onChange={handleChange}
-                    />
+                    <label>Item Image :</label>      
+           <input type="file" name="imageItem" onChange={handleFileChange} style={{ marginBottom: '16px' }} />
+
                 </div>
                 <div>
                     <label>Discount:</label>

@@ -7,10 +7,8 @@ import { Menu } from '../../model/Menu.js';
 import verifyAuthToken from "../../middleware/verifyAuthToken.js";
 import paypal from '@paypal/checkout-server-sdk';
 import client from '../../paypal/paypalClient.js';
-import {auth, storage,db}  from '../../firebase/firebaseConfig.js'
-import { createUserWithEmailAndPassword} from "firebase/auth";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { doc, setDoc } from "firebase/firestore";
+import { storage}  from '../../firebase/firebaseConfig.js'
+import { ref, uploadBytes, getDownloadURL,deleteObject } from "firebase/storage";
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { config } from "dotenv";
@@ -27,7 +25,9 @@ export const resolvers = {
 
       const foundUser = await User.findById(id).populate('driverInfo').populate('businessInfo');
       if (!foundUser || foundUser.userType !== userType) throw new Error('User not found');
-      return foundUser;
+
+       // Fetch the profile picture URL from Firebase Storage
+  return foundUser;
     },
 
     getAllUsers: async (_, __, { headers }) => {
@@ -104,29 +104,7 @@ export const resolvers = {
       // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      const firebaseUser = await createUserWithEmailAndPassword(auth, email, password)
-      .then(userCredential => userCredential.user)
-      .catch(error => { throw new Error("Firebase Auth error: " + error.message); });
-
      
-
-      if (profilePicture) {
-        const storageRef = ref(storage, `profilePictures/${firebaseUser.uid}`);
-        const uploadResult = await uploadBytes(storageRef, profilePicture);
-        profilePictureURL = await getDownloadURL(uploadResult.ref);
-    }
-
-      const userDetails = doc(db, "UserDetails", firebaseUser.uid); 
-      await setDoc(userDetails, {
-        username,
-        email,
-        userType,
-        profilePictureURL,
-        driverInfo: driverId, 
-        businessInfo: businessId, 
-        createdAt: new Date().toISOString(),
-    });
-
       // Create the user
       const user = new User({
         username,
@@ -139,6 +117,32 @@ export const resolvers = {
 
       // Save the user to the database
       await user.save();
+      if (profilePicture) {
+        try {
+          const base64Data = profilePicture.replace(/^data:image\/\w+;base64,/, ''); // Strip metadata
+          const buffer = Buffer.from(base64Data, 'base64'); // Convert Base64 to Buffer
+    
+          // Define storage reference and file path
+          const storageRef = ref(storage, `profilePictures/${user._id}.jpg`);
+    
+          // Upload file to Firebase Storage
+          await uploadBytes(storageRef, buffer, {
+            contentType: 'image/jpeg', // Adjust based on your image type
+          });
+    
+          console.log(`Uploaded profile picture for user ${user._id} to Firebase Storage`);
+    
+          // Get the public download URL
+          profilePictureURL = await getDownloadURL(storageRef);
+    
+          // Update the user with the profile picture URL
+          user.profilePicture = profilePictureURL;
+          await user.save();
+        } catch (error) {
+          console.error('Error uploading profile picture to Firebase Storage:', error);
+          throw new Error('Failed to upload profile picture');
+        }
+      }
 
       return {
         id: user._id,
@@ -192,13 +196,14 @@ export const resolvers = {
   }, { headers }) => {
       verifyAuthToken(headers); 
   
+
+
       const newMenuItem = new Menu({
           name,
           description,
           price,
           quantity,
           stockStatus,
-          imageItem,
           unitOfMeasurement,
           allergenInformation,
           category,
@@ -209,6 +214,35 @@ export const resolvers = {
       });
   
       await newMenuItem.save();
+
+      if (imageItem) {
+        try {
+          const base64Data = imageItem.replace(/^data:image\/\w+;base64,/, ''); // Strip metadata
+          const buffer = Buffer.from(base64Data, 'base64'); // Convert Base64 to Buffer
+    
+          // Define storage reference and file path
+          const storageRef = ref(storage, `MenuItems/${newMenuItem._id}.jpg`);
+    
+          // Upload file to Firebase Storage
+          await uploadBytes(storageRef, buffer, {
+            contentType: 'image/jpeg', // Adjust based on your image type
+          });
+    
+          console.log(`Uploaded profile picture for menu item ${newMenuItem._id} to Firebase Storage`);
+    
+          // Get the public download URL
+          const imageItemURL = await getDownloadURL(storageRef);
+    
+          // Update the user with the profile picture URL
+          newMenuItem.imageItem = imageItemURL;
+          await newMenuItem.save();
+        } catch (error) {
+          console.error('Error uploading profile picture to Firebase Storage:', error);
+          throw new Error('Failed to upload profile picture');
+        }
+      }
+
+
       return newMenuItem;
   },
   
@@ -217,7 +251,16 @@ export const resolvers = {
       verifyAuthToken(headers); // Verifying the token
       const menuItem = await Menu.findOne({itemId});
       if (!menuItem) return { success: false, message: 'Menu item not found' };
-
+      if (menuItem.imageItem) {
+        try {
+            const storageRef = ref(storage, `MenuItems/${menuItem._id}.jpg`);
+            await deleteObject(storageRef); // Deletes the file from Firebase Storage
+            console.log(`Deleted image for menu item ${menuItem._id} from Firebase Storage`);
+        } catch (error) {
+            console.error('Error deleting image from Firebase Storage:', error);
+            throw new Error('Failed to delete menu item image from Firebase');
+        }
+    }
       await Menu.findByIdAndDelete(menuItem._id);
       return { success: true, message: 'Menu item successfully deleted' };
     },
@@ -232,10 +275,38 @@ export const resolvers = {
               throw new Error('Menu item not found');
           }
 
+          if (input.imageItem) {
+            try {
+                const base64Data = input.imageItem.replace(/^data:image\/\w+;base64,/, ''); // Strip metadata
+                const buffer = Buffer.from(base64Data, 'base64'); // Convert Base64 to Buffer
+
+                // Define storage reference and file path
+                const storageRef = ref(storage, `MenuItems/${menuItem._id}.jpg`);
+
+                // Upload the new image to Firebase Storage
+                await uploadBytes(storageRef, buffer, {
+                    contentType: 'image/jpeg', // Adjust based on your image type
+                });
+
+                console.log(`Uploaded updated image for menu item ${menuItem._id} to Firebase Storage`);
+
+                // Get the public download URL for the updated image
+                const imageItemURL = await getDownloadURL(storageRef);
+
+                // Update the image URL in the MongoDB document
+                menuItem.imageItem = imageItemURL;
+            } catch (error) {
+                console.error('Error uploading updated image to Firebase Storage:', error);
+                throw new Error('Failed to upload updated image');
+            }
+        }
+
           // Update fields in the menu item with input values
           Object.keys(input).forEach(key => {
-              menuItem[key] = input[key];
-          });
+            if (key !== 'imageItem') {
+                menuItem[key] = input[key];
+            }
+        });
 
           // Save the updated item
           const updatedMenuItem = await menuItem.save();
@@ -363,15 +434,39 @@ const handleUserType = async (userType, { driverLicense, vehicle, businessLicens
     if (!driverLicense || !vehicle) throw new Error('Complete driver information required');
     const driver = new Driver({ driverLicense, vehicle });
     const savedDriver = await driver.save();
-    console.log('savedDriver...!!',savedDriver)
 
     return { driverInfo: savedDriver._id };
   }
 
   if (userType === 'business') {
     if (!businessLicense || !businessLocation) throw new Error('Complete business information required');
-    const business = new Business({ businessLicense, businessType, businessLocation,businessName,businessLogo,bannerImage,openingHours});
+    const business = new Business({ businessLicense, businessType, businessLocation,businessName,openingHours});
     const savedBusiness = await business.save();
+    console.log('savedBusiness...!!',savedBusiness)
+    let businessLogoURL = null;
+    let businessBannerURL = null;
+
+    if (businessLogo) {
+      const base64Data = businessLogo.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      const logoStorageRef = ref(storage, `businessLogos/${savedBusiness._id}.jpg`);
+      await uploadBytes(logoStorageRef, buffer, { contentType: 'image/jpeg' });
+      businessLogoURL = await getDownloadURL(logoStorageRef);
+      console.log('businessLogoURL...!!',businessLogoURL)
+      savedBusiness.businessLogo = businessLogoURL;
+    }
+
+    if (bannerImage) {
+      const base64Data = bannerImage.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      const bannerStorageRef = ref(storage, `businessBanners/${savedBusiness._id}.jpg`);
+      await uploadBytes(bannerStorageRef, buffer, { contentType: 'image/jpeg' });
+      businessBannerURL = await getDownloadURL(bannerStorageRef);
+      console.log('businessBannerURL...!!',businessBannerURL)
+
+      savedBusiness.bannerImage = businessBannerURL;
+    }
+    await savedBusiness.save();
     return { businessInfo: savedBusiness._id };
   }
 
