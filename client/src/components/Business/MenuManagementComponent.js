@@ -1,6 +1,28 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 import groceryStoreList from '../BusinessCategory/groceryStoreList.json';
+import {
+    Typography,
+    TextField,
+    Checkbox,
+    Button,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Grid,
+    Container,
+    Box,
+    FormGroup,
+    FormControlLabel,
+} from '@mui/material';
 
 function MenuManagementComponent() {
     const { userType, userId } = useContext(UserContext);
@@ -8,7 +30,7 @@ function MenuManagementComponent() {
     const [menuItems, setMenuItems] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [editItemId, setEditItemId] = useState(null);
-    const [categoryList, setCategoryList] = useState([]); 
+    const [categoryList, setCategoryList] = useState([]);
 
 
     const [menuItem, setMenuItem] = useState({
@@ -33,7 +55,6 @@ function MenuManagementComponent() {
         businessId: '',
         businessType: ''
     });
-
 
     const fetchUserData = async () => {
         const token = localStorage.getItem('token');
@@ -132,27 +153,27 @@ function MenuManagementComponent() {
             // Update the state with the fetched menu items
             setMenuItems(result.data.getMenuItems);
             if (businessInfo.businessType === 'grocery') {
-            const categoriesFromMenu = result.data.getMenuItems
-                .map(item => item.category)
-                .filter(category => !groceryStoreList.some(existingItem => existingItem.category === category));
+                const categoriesFromMenu = result.data.getMenuItems
+                    .map(item => item.category)
+                    .filter(category => !groceryStoreList.some(existingItem => existingItem.category === category));
 
-            const subcategoriesFromMenu = result.data.getMenuItems
-                .map(item => item.subcategory)
-                .filter(subcategory => {
-                    // Check if subcategory exists in any of the groceryStoreList items
-                    return !groceryStoreList.some(existingItem => existingItem.subcategories.includes(subcategory));
-                });
+                const subcategoriesFromMenu = result.data.getMenuItems
+                    .map(item => item.subcategory)
+                    .filter(subcategory => {
+                        // Check if subcategory exists in any of the groceryStoreList items
+                        return !groceryStoreList.some(existingItem => existingItem.subcategories.includes(subcategory));
+                    });
 
-            // Update groceryStoreList with new categories and subcategories
-            if (categoriesFromMenu.length > 0 || subcategoriesFromMenu.length > 0) {
-                updateGroceryStoreList(categoriesFromMenu, subcategoriesFromMenu);
+                // Update groceryStoreList with new categories and subcategories
+                if (categoriesFromMenu.length > 0 || subcategoriesFromMenu.length > 0) {
+                    updateGroceryStoreList(categoriesFromMenu, subcategoriesFromMenu);
+                }
+            } else {
+                const uniqueCategories = Array.from(
+                    new Set(result.data.getMenuItems.map(item => item.category))
+                ).map(category => ({ category }));
+                setCategoryList(uniqueCategories);
             }
-        }else{
-            const uniqueCategories = Array.from(
-                new Set(result.data.getMenuItems.map(item => item.category))
-            ).map(category => ({ category })); 
-            setCategoryList(uniqueCategories);
-        }
         } catch (error) {
             console.error('Error fetching menu items:', error);
         }
@@ -241,7 +262,7 @@ function MenuManagementComponent() {
 
 
     const handleEdit = (item) => {
-        console.log('item..!!', item)
+        console.log('item..!!', item);
         setMenuItem(item);
         setIsEditing(true);
         setEditItemId(item.id);
@@ -492,30 +513,30 @@ function MenuManagementComponent() {
     const handleFileChange = (e) => {
         const { name, files } = e.target;
         const maxSize = 10 * 1024 * 1024; // 10MB limit
-    
-        if (files && files[0].size > maxSize) {
-          alert('File size exceeds the maximum limit of 10MB.');
-          return;
-        }
-    
-        if (files && files[0]) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setMenuItem(prevData => ({
-              ...prevData,
-              [name]: reader.result // Store the base64 string
-            }));
-          };
-          reader.readAsDataURL(files[0]); // Convert file to base64
-        }
-      };
 
-      
+        if (files && files[0].size > maxSize) {
+            alert('File size exceeds the maximum limit of 10MB.');
+            return;
+        }
+
+        if (files && files[0]) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setMenuItem(prevData => ({
+                    ...prevData,
+                    [name]: reader.result // Store the base64 string
+                }));
+            };
+            reader.readAsDataURL(files[0]); // Convert file to base64
+        }
+    };
+
+
     const getFilteredCategories = () => {
         if (businessInfo.businessType === 'grocery_store') {
             // Return groceryStoreList directly if business type is 'grocery'
             return groceryStoreList;
-        }else {
+        } else {
             // Return hardcoded categories for other business types
             return [
                 { category: 'Appetizers', subcategories: ['Salads', 'Soup', 'Finger Foods'] },
@@ -552,250 +573,300 @@ function MenuManagementComponent() {
 
     }, [userId, userType]);
 
-  
 
     return (
-        <div>
-            <h2>{isEditing ? 'Edit Menu Item' : 'Add New Menu Item'}</h2>
-            <form onSubmit={isEditing ? handleUpdateItem : handleSubmit}>
-                <div>
-                    <label>Name:</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={menuItem.name}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Description:</label>
-                    <textarea
-                        name="description"
-                        value={menuItem.description}
-                        onChange={handleChange}
-                    ></textarea>
-                </div>
-                <div>
-                    <label>Price:</label>
-                    <input
-                        type="number"
-                        name="price"
-                        value={menuItem.price}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-            {businessInfo.businessType === 'grocery_store' && (
-                <div>
-                    <label>Quantity:</label>
-                    <input
-                        type="number"
-                        name="quantity"
-                        value={menuItem.quantity}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                )}
-                <div>
-                    <label>Category:</label>
-                    {businessInfo.businessType === 'grocery_store' || menuItems.length > 0 ? (
-                        <select
-                            name="category"
-                            value={menuItem.category}
-                            onChange={handleCategoryChange}
-                            required
-                        >
-                            <option value="">Select Category</option>
-                            {(businessInfo.businessType === 'grocery_store' ? groceryStoreList : categoryList).map((categoryItem, index) => (
-                <option key={index} value={categoryItem.category}>
-                    {categoryItem.category}
-                </option>
-            ))}
-                            <option value="Other">Other</option> {/* Other option */}
-                        </select>
-                    ) : (
-                        <input
-                            type="text"
-                            name="category"
-                            placeholder="Enter Category"
-                            value={menuItem.category}
-                            onChange={handleChange}
-                            required
-                        />
-                    )}
-                </div>
+        <Container>
+            {/* Form Section */}
+            <Paper elevation={3} sx={{ padding: 3, marginBottom: 4 }}>
+                <Typography variant="h4" gutterBottom>
+                    {isEditing ? "Edit Menu Item" : "Add New Menu Item"}
+                </Typography>
+                <form onSubmit={isEditing ? handleUpdateItem : handleSubmit}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                label="Name"
+                                name="name"
+                                value={menuItem.name}
+                                onChange={handleChange}
+                                required
+                            />
+                        </Grid>
 
-                {menuItem.category === 'Other' && (
-                    <div>
-                        <label>Custom Category:</label>
-                        <input
-                            type="text"
-                            name="customCategory"
-                            value={menuItem.customCategory}
-                            onChange={handleChange}
-                        />
-                    </div>
-                )}
-        {businessInfo.businessType === 'grocery_store' && (
-                <div>
-                    <label>Subcategory:</label>
-                    
-                        <select
-                            name="subcategory"
-                            value={menuItem.subcategory}
-                            onChange={handleSubcategoryChange}
-                            required
-                        >
-                            <option value="">Select Subcategory</option>
-                            {getSubcategories().map((subcategory, index) => (
-                                <option key={index} value={subcategory}>
-                                    {subcategory}
-                                </option>
-                            ))}
-                            <option value="Other">Other</option> {/* Other option */}
-                        </select>
-                   
-                </div>
- )}
-                {menuItem.subcategory === 'Other' && (
-                    <div>
-                        <label>Custom Subcategories (comma separated):</label>
-                        <input
-                            type="text"
-                            name="customSubcategories"
-                            value={menuItem.customSubcategories}
-                            onChange={handleCustomSubcategoryChange}
-                        />
-                    </div>
-                )}
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                label="Price"
+                                name="price"
+                                type="number"
+                                value={menuItem.price}
+                                onChange={handleChange}
+                                required
+                            />
+                        </Grid>
 
+                        <Grid item xs={12} >
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={4}
+                                label="Description"
+                                name="description"
+                                value={menuItem.description}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        {businessInfo.businessType === "grocery_store" && (
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Quantity"
+                                    name="quantity"
+                                    type="number"
+                                    value={menuItem.quantity}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </Grid>
+                        )}
+                        <Grid item xs={12} sm={6}>
+                            <Select
+                                fullWidth
+                                name="category"
+                                value={menuItem.category}
+                                onChange={handleCategoryChange}
+                                required
+                            >
+                                <MenuItem value="">Select Category</MenuItem>
+                                {(businessInfo.businessType === "grocery_store"
+                                    ? groceryStoreList
+                                    : categoryList
+                                ).map((categoryItem, index) => (
+                                    <MenuItem key={index} value={categoryItem.category}>
+                                        {categoryItem.category}
+                                    </MenuItem>
+                                ))}
+                                <MenuItem value="Other">Other</MenuItem>
+                            </Select>
+                        </Grid>
+                        {menuItem.category === "Other" && (
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Custom Category"
+                                    name="customCategory"
+                                    value={menuItem.customCategory}
+                                    onChange={handleChange}
+                                />
+                            </Grid>
+                        )}
+                        {businessInfo.businessType === "grocery_store" && (
+                            <Grid item xs={12} sm={6}>
+                                <Select
+                                    fullWidth
+                                    name="subcategory"
+                                    value={menuItem.subcategory}
+                                    onChange={handleSubcategoryChange}
+                                    required
+                                >
+                                    <MenuItem value="">Select Subcategory</MenuItem>
+                                    {getSubcategories().map((subcategory, index) => (
+                                        <MenuItem key={index} value={subcategory}>
+                                            {subcategory}
+                                        </MenuItem>
+                                    ))}
+                                    <MenuItem value="Other">Other</MenuItem>
+                                </Select>
+                            </Grid>
+                        )}
+                        {menuItem.subcategory === "Other" && (
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Custom Subcategories (comma separated)"
+                                    name="customSubcategories"
+                                    value={menuItem.customSubcategories}
+                                    onChange={handleCustomSubcategoryChange}
+                                />
+                            </Grid>
+                        )}
+                        {businessInfo.businessType === "grocery_store" && (
+                            <Grid item xs={12} sm={6}>
+                                <Select
+                                    fullWidth
+                                    name="unitOfMeasurement"
+                                    value={menuItem.unitOfMeasurement}
+                                    onChange={handleChange}
+                                    required
+                                >
+                                    <MenuItem value="">Select Unit</MenuItem>
+                                    {getUnits().map((unit, index) => (
+                                        <MenuItem key={index} value={unit}>
+                                            {unit}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </Grid>
+                        )}
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                label="Allergen Information"
+                                name="allergenInformation"
+                                value={menuItem.allergenInformation}
+                                onChange={handleChange}
+                            />
+                        </Grid>
 
-                {businessInfo.businessType === 'grocery_store' && (
-                <div>
-                    <label>Unit of Measurement:</label>
-                    <select
-                        name="unitOfMeasurement"
-                        value={menuItem.unitOfMeasurement}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Select Unit</option>
-                        {getUnits().map((unit, index) => (
-                            <option key={index} value={unit}>
-                                {unit}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
-                <div>
-                    <label>Allergen Information:</label>
-                    <input
-                        type="text"
-                        name="allergenInformation"
-                        value={menuItem.allergenInformation}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div>
-                    <label>Item Image :</label>      
-           <input type="file" name="imageItem" onChange={handleFileChange} style={{ marginBottom: '16px' }} />
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                label="Discount"
+                                name="discount"
+                                type="number"
+                                value={menuItem.discount}
+                                onChange={handleChange}
+                                inputProps={{ min: 0, max: 100 }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Button
+                                variant="outlined"
+                                component="label"
+                                fullWidth
+                            >
+                                Upload Image
+                                <input
+                                    type="file"
+                                    name="imageItem"
+                                    hidden
+                                    onChange={handleFileChange}
+                                />
+                            </Button>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={menuItem.featured}
+                                        onChange={(e) =>
+                                            setMenuItem({
+                                                ...menuItem,
+                                                featured: e.target.checked,
+                                            })
+                                        }
+                                    />
+                                }
+                                label="Featured"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={menuItem.stockStatus}
+                                        onChange={handleCheckboxChange}
+                                    />
+                                }
+                                label="Available"
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Button variant="contained" color="primary" type="submit">
+                                {isEditing ? "Update Menu Item" : "Add Menu Item"}
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </form>
+            </Paper>
 
-                </div>
-                <div>
-                    <label>Discount:</label>
-                    <input
-                        type="number"
-                        name="discount"
-                        value={menuItem.discount}
-                        onChange={handleChange}
-                        min="0"
-                        max="100"
-                    />
-                </div>
-                <div>
-                    <label>Featured:</label>
-                    <input
-                        type="checkbox"
-                        name="featured"
-                        checked={menuItem.featured}
-                        onChange={(e) =>
-                            setMenuItem({ ...menuItem, featured: e.target.checked })
-                        }
-                    />
-                </div>
-                <div>
-                    <label>Availability Status:</label>
-                    <input
-                        type="checkbox"
-                        name="stockStatus"
-                        checked={menuItem.stockStatus}
-                        onChange={handleCheckboxChange}
-                    />
-                </div>
-
-                <button type="submit">
-                    <button type="submit">{isEditing ? 'Update Menu Item' : 'Add Menu Item'}</button>
-                </button>
-            </form>
-
-            <h2>Menu Items</h2>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Item ID</th>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Stock Status</th>
-                        <th>Image</th>
-                        <th>Unit of Measurement</th>
-                        <th>Allergen Info</th>
-                        <th>Category</th>
-                        <th>Subcategory</th>
-                        <th>Featured</th>
-                        <th>Discount</th>
-                        <th>Approval Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Array.isArray(menuItems) && menuItems.length > 0 ? (
-                        menuItems.map((item) => (
-                            <tr key={item.id}>
-                                <td>{item.itemId}</td>
-                                <td>{item.name}</td>
-                                <td>{item.description}</td>
-                                <td>{item.price}</td>
-                                <td>{item.quantity}</td>
-                                <td>{item.stockStatus ? 'Available' : 'UnAvailable'}</td>
-                                <td><img src={item.imageItem} alt={item.name} width="100" height="100" /></td>
-                                <td>{item.unitOfMeasurement}</td>
-                                <td>{item.allergenInformation}</td>
-                                <td>{item.category}</td>
-                                <td>{item.subcategory}</td>
-                                <td>{item.featured ? 'Yes' : 'No'}</td>
-                                <td>{item.discount}</td>
-                                <td>{item.adminApprovalStatus ? 'Approved' : 'Pending'}</td>
-                                <td>
-                                    <button onClick={() => handleEdit(item)}>Edit</button>
-                                    <button onClick={() => handleDelete(item.itemId)}>Delete</button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="14">No menu items available</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-
-
-        </div>
+            {/* Table Section */}
+            <Typography variant="h4" gutterBottom>
+                Menu Items
+            </Typography>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Item ID</TableCell>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Description</TableCell>
+                            <TableCell>Price</TableCell>
+                            <TableCell>Quantity</TableCell>
+                            <TableCell>Stock Status</TableCell>
+                            <TableCell>Image</TableCell>
+                            <TableCell>Unit of Measurement</TableCell>
+                            <TableCell>Allergen Info</TableCell>
+                            <TableCell>Category</TableCell>
+                            <TableCell>Subcategory</TableCell>
+                            <TableCell>Featured</TableCell>
+                            <TableCell>Discount</TableCell>
+                            <TableCell>Approval Status</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {Array.isArray(menuItems) && menuItems.length > 0 ? (
+                            menuItems.map((item) => (
+                                <TableRow key={item.id}>
+                                    <TableCell>{item.itemId}</TableCell>
+                                    <TableCell>{item.name}</TableCell>
+                                    <TableCell>{item.description}</TableCell>
+                                    <TableCell>{item.price}</TableCell>
+                                    <TableCell>{item.quantity}</TableCell>
+                                    <TableCell>
+                                        {item.stockStatus ? "Available" : "Unavailable"}
+                                    </TableCell>
+                                    <TableCell>
+                                        <img
+                                            src={item.imageItem}
+                                            alt={item.name}
+                                            width="100"
+                                            height="100"
+                                        />
+                                    </TableCell>
+                                    <TableCell>{item.unitOfMeasurement}</TableCell>
+                                    <TableCell>{item.allergenInformation}</TableCell>
+                                    <TableCell>{item.category}</TableCell>
+                                    <TableCell>{item.subcategory}</TableCell>
+                                    <TableCell>
+                                        {item.featured ? "Yes" : "No"}
+                                    </TableCell>
+                                    <TableCell>{item.discount}</TableCell>
+                                    <TableCell>
+                                        {item.adminApprovalStatus ? "Approved" : "Pending"}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            onClick={() => handleEdit(item)}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            color="secondary"
+                                            onClick={() => handleDelete(item.itemId)}
+                                            style={{ marginLeft: "8px" }}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={15} align="center">
+                                    No menu items available
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Container>
     );
 }
 
