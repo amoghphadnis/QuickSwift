@@ -53,7 +53,7 @@ const Navbar = () => {
               <Button color="inherit" component={Link} to="/admin/orders">Manage Orders</Button>
               <Button color="inherit" component={Link} to="/admin/users">Manage Users</Button>
               <Button color="inherit" component={Link} to="/admin/menuapprovals">Manage Menu Approvals</Button>
-              <Button color="inherit" component={Link} to="/admin/delivery">Manage Delivery Personnel</Button>
+              {/* <Button color="inherit" component={Link} to="/admin/delivery">Manage Delivery Personnel</Button> */}
               <Button color="inherit" component={Link} to="/admin/analytics">Analytics</Button>
             </>
           ) : isTokenValid && userType === 'customer' ? (

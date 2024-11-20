@@ -77,6 +77,7 @@ type MenuItem {
     featured: Boolean
     discount: Float
     adminApprovalStatus: Boolean
+    businessType: String
 }
 
 type OpeningHour {
@@ -193,5 +194,6 @@ register(
     capturePayment(orderId: String!): PaymentIntent
     forgotPassword(email: String!): Boolean
     resetPassword(userId: ID!,token: String!, newPassword: String!): Boolean
+    updateAdminApprovalStatus(id: ID!, adminApprovalStatus: Boolean!): MenuItem
 
 }
