@@ -32,6 +32,7 @@ const AdminComponent=()=>{
                           username
                           email
                           userType
+                          profilePicture
                         }
                       }
                     `,
@@ -67,6 +68,16 @@ const AdminComponent=()=>{
           <p>Username: {user.username}</p>
           <p>Email: {user.email}</p>
           <p>User Type: {user.userType}</p>
+          {user.profilePicture && (
+            <div>
+              <h4>Profile Picture:</h4>
+              <img
+                src={user.profilePicture}  // If base64 encoded, this should display correctly
+                alt="Profile"
+                style={{ width: '150px', height: '150px', borderRadius: '50%' }}  // Style the profile picture
+              />
+            </div>
+          )}
         </>
       ) : (
         <p>Loading user data...</p>
