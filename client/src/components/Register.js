@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Typography } from '@mui/material';
-import UserDetails from './Register/UserDetails';
-import BusinessDetails from './Register/BusinessDetails';
-import DriverDetails from './Register/DriverDetails';
-import CustomerDetails from './Register/CustomerDetails';
-import AdminDetails from './Register/AdminDetails';
-import ReviewAndSubmit from './Register/ReviewAndSubmit';
+import { Box, TextField, Button,Grid,IconButton  ,Typography, Link, MenuItem } from '@mui/material';
+import { AddCircleOutline, RemoveCircleOutline } from '@mui/icons-material';
 
 function Register({ userType }) {
   const [formData, setFormData] = useState({
@@ -26,43 +21,63 @@ function Register({ userType }) {
     businessName: '',
     businessLogo: '',
     bannerImage: '',
-    businessLocation: {
+    businessLocation: { // Updated to nest business location fields
       address: '',
       city: '',
       postalcode: ''
     },
-    openingHours: [{ day: '', openTime: '', closeTime: '' }]
+    openingHours:[{ day: '', openTime: '', closeTime: '' }]
   });
 
-  const [currentStep, setCurrentStep] = useState(0); // Tracks the current step
+  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-  
+    
+    // Check if the field is part of businessLocation
     if (name === 'businessAddress' || name === 'businessCity' || name === 'businessPostalCode') {
-      const field = name.replace('business', '').toLowerCase();
-      setFormData((prevData) => {
-        console.log('Updating business location:', field, value); // Debug log
-        return {
-          ...prevData,
-          businessLocation: {
-            ...prevData.businessLocation,
-            [field]: value,
-          },
-        };
-      });
+      const locationField = name.replace('business', '').toLowerCase();
+      console.log('locationField...!!',locationField)
+      setFormData(prevData => ({
+        ...prevData,
+        businessLocation: {
+          ...prevData.businessLocation,
+          [locationField]: value
+        }
+      }));
     } else {
-      setFormData((prevData) => {
-        console.log('Updating field:', name, value); // Debug log
-        return {
-          ...prevData,
-          [name]: value,
-        };
-      });
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value
+      }));
     }
   };
-  
+
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    console.log('name..!!',name)
+    console.log('files..!!',files)
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+
+    if (files && files[0].size > maxSize) {
+      alert('File size exceeds the maximum limit of 10MB.');
+      return;
+    }
+
+    if (files && files[0]) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prevData => ({
+          ...prevData,
+          [name]: reader.result // Store the base64 string
+        }));
+      };
+      reader.readAsDataURL(files[0]); // Convert file to base64
+    }
+    console.log('formdata..!!',formData)
+  };
 
   const handleOpeningHoursChange = (index, field, value) => {
     setFormData((prevData) => {
@@ -86,113 +101,369 @@ function Register({ userType }) {
     }));
   };
 
-  const handleNext = () => {
-    setCurrentStep((prevStep) => prevStep + 1);
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prevStep) => prevStep - 1);
-  };
-
   const handleRegister = async (e) => {
     e.preventDefault();
-  
-    const userSpecificData = userType === 'business'
-      ? {
-          businessName: formData.businessName,
-          businessLicense: formData.businessLicense,
-          businessLocation: formData.businessLocation,
-          openingHours: formData.openingHours,
-        }
-      : userType === 'driver'
-      ? {
-          driverLicense: formData.driverLicense,
-          vehicle: {
-            make: formData.vehicleMake,
-            model: formData.vehicleModel,
-            year: formData.vehicleYear,
-            licensePlate: formData.licensePlate,
-            insuranceProof: formData.insuranceProof,
-          },
-        }
-      : {};
-  
+
+    // Basic validation
+    const requiredFields = ['username', 'email', 'password'];
+    if (userType === 'driver') requiredFields.push('driverLicense');
+    if (userType === 'business') requiredFields.push('businessLicense', 'businessType', 'businessLocation.address', 'businessLocation.city', 'businessLocation.postalcode');
+
+    for (const field of requiredFields) {
+      const value = field.includes('.') ? field.split('.').reduce((o, i) => o[i], formData) : formData[field];
+      if (!value) {
+        alert(`Please fill in the ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+        return;
+      }
+    }
+
     try {
       const response = await fetch('http://localhost:5000/graphql', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          query: `mutation Register($username: String!, $email: String!, $password: String!) {}`,
+          query: `
+            mutation Register(
+              $username: String!,
+              $email: String!,
+              $password: String!,
+              $userType: String!,
+              $phoneNumber: String,
+              $profilePicture: String,
+              $driverLicense: String,
+              $vehicle: VehicleInput,
+              $businessLicense: String,
+              $businessType: String,
+              $businessName: String,
+              $businessLogo: String,
+              $bannerImage: String,
+              $businessLocation: LocationInput,
+              $openingHours: [OpeningHourInput]
+            ) {
+              register(
+                username: $username,
+                email: $email,
+                password: $password,
+                userType: $userType,
+                phoneNumber: $phoneNumber,
+                profilePicture: $profilePicture,
+                driverLicense: $driverLicense,
+                vehicle: $vehicle,
+                businessLicense: $businessLicense,
+                businessType: $businessType,
+                businessName: $businessName,
+                businessLogo: $businessLogo,
+                bannerImage:  $bannerImage,
+                businessLocation: $businessLocation,
+                openingHours: $openingHours
+              ) {
+                id
+                username
+                email
+                userType
+               
+                
+              }
+            }
+          `,
           variables: {
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-            ...userSpecificData,
-          },
-        }),
+            ...formData,
+            userType: userType,
+            driverLicense: userType === 'driver' ? formData.driverLicense : null,
+            vehicle: userType === 'driver' ? {
+              make: formData.vehicleMake,
+              model: formData.vehicleModel,
+              year: parseInt(formData.vehicleYear),
+              licensePlate: formData.licensePlate,
+              insuranceProof: formData.insuranceProof
+            } : null,
+            businessLicense: userType === 'business' ? formData.businessLicense : null,
+            businessType: userType === 'business' ? formData.businessType : null,
+            businessLocation: userType === 'business' 
+            ? formData.businessLocation
+            : null,   
+          businessName: userType === 'business' ? formData.businessName : null,
+          businessLogo: userType === 'business' ? formData.businessLogo : null,
+          bannerImage: userType === 'business' ? formData.bannerImage : null,
+          openingHours:userType === 'business' ? formData.openingHours : null,
+          }
+        })
+
       });
-  
+      console.log('response...!!',response.body)
+
       const result = await response.json();
       if (result.data && result.data.register) {
-        alert('Registration successful!');
+        alert('Registration successful as ' + userType);
         navigate(`/login/${userType}`);
       } else {
-        alert('Registration failed: ' + (result.errors?.[0]?.message || 'Unknown error.'));
+        alert('Registration failed: ' + (result.errors?.[0]?.message || 'Unknown error occurred.'));
       }
     } catch (err) {
       console.error('Error:', err);
       alert('Registration failed due to an unexpected error.');
     }
   };
-  
 
-  const steps = [
-    <UserDetails formData={formData} handleChange={handleChange} />,
-    userType === 'business' ? (
-      <BusinessDetails
-        formData={formData}
-        handleChange={handleChange}
-        handleOpeningHoursChange={handleOpeningHoursChange}
-        addOpeningHour={addOpeningHour}
-        removeOpeningHour={removeOpeningHour}
-      />
-    ) : userType === 'driver' ? (
-      <DriverDetails formData={formData} handleChange={handleChange} />
-    ) : userType === 'admin' ? (
-      <AdminDetails formData={formData} handleChange={handleChange} />
-    ) : (
-      <CustomerDetails formData={formData} handleChange={handleChange} />
-    ),
-    <ReviewAndSubmit
-      formData={formData}
-      userType={userType}
-      handleBack={handleBack}
-      handleRegister={handleRegister}
-    />
-  ];
+ 
 
   return (
-    <Box sx={{ maxWidth: '600px', margin: 'auto', mt: 5 }}>
-      <Typography variant="h4" textAlign="center" sx={{ mb: 3 }}>
-        Step {currentStep + 1}: {userType.charAt(0).toUpperCase() + userType.slice(1)} Registration
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        padding: 2,
+      }}
+    >
+      <Typography variant="h4" sx={{ mb: 4 }}>
+        Register as {userType.charAt(0).toUpperCase() + userType.slice(1)}
       </Typography>
-      {steps[currentStep]}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-        {currentStep > 0 && (
-          <Button variant="outlined" onClick={handleBack}>
-            Back
-          </Button>
+
+      <form onSubmit={handleRegister} style={{ width: '100%', maxWidth: '400px' }}>
+        <TextField
+          label="Username"
+          type="text"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Email"
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Password"
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          fullWidth
+          required
+          sx={{ mb: 2 }}
+        />
+        <TextField
+          label="Phone Number"
+          type="tel"
+          name="phoneNumber"
+          value={formData.phoneNumber}
+          onChange={handleChange}
+          fullWidth
+          sx={{ mb: 2 }}
+        />
+      <input
+  type="file"
+  name="profilePicture"
+  onChange={handleFileChange}
+  style={{ marginBottom: '16px' }}
+/>
+
+        {userType === 'driver' && (
+          <>
+            <TextField
+              label="Driver License"
+              type="text"
+              name="driverLicense"
+              value={formData.driverLicense}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Vehicle Make"
+              type="text"
+              name="vehicleMake"
+              value={formData.vehicleMake}
+              onChange={handleChange}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Vehicle Model"
+              type="text"
+              name="vehicleModel"
+              value={formData.vehicleModel}
+              onChange={handleChange}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Vehicle Year"
+              type="number"
+              name="vehicleYear"
+              value={formData.vehicleYear}
+              onChange={handleChange}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="License Plate"
+              type="text"
+              name="licensePlate"
+              value={formData.licensePlate}
+              onChange={handleChange}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Insurance Proof"
+              type="text"
+              name="insuranceProof"
+              value={formData.insuranceProof}
+              onChange={handleChange}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+          </>
         )}
-        {currentStep < steps.length - 1 ? (
-          <Button variant="contained" onClick={handleNext}>
-            Next
-          </Button>
-        ) : (
-          <Button variant="contained" onClick={handleRegister}>
-            Submit
-          </Button>
+
+        {userType === 'business' && (
+          <>
+            <TextField
+              label="Business License"
+              type="text"
+              name="businessLicense"
+              value={formData.businessLicense}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField 
+              label="Business Name" 
+              name="businessName" 
+              value={formData.businessName} 
+              onChange={handleChange} 
+              fullWidth 
+              required 
+              sx={{ mb: 2 }} />
+
+            <TextField
+              label="Business Type"
+              select
+              name="businessType"
+              value={formData.businessType}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="restaurant">Restaurant</MenuItem>
+              <MenuItem value="grocery_store">Grocery Store</MenuItem>
+              <MenuItem value="cafe">Cafe</MenuItem>
+              <MenuItem value="bakery">Bakery</MenuItem>
+              <MenuItem value="other">Other</MenuItem>
+            </TextField>
+            <input type="file" name="businessLogo" onChange={handleFileChange} style={{ marginBottom: '16px' }} />
+            <input type="file" name="bannerImage" onChange={handleFileChange} style={{ marginBottom: '16px' }} />
+
+            <TextField
+              label="Business Address"
+              type="text"
+              name="businessAddress"
+              value={formData.businessLocation.address}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Business City"
+              type="text"
+              name="businessCity"
+              value={formData.businessLocation.city}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              label="Business Postal Code"
+              type="text"
+              name="businessPostalCode"
+              value={formData.businessLocation.postalcode}
+              onChange={handleChange}
+              fullWidth
+              required
+              sx={{ mb: 2 }}
+            />
+             <Typography variant="h6" sx={{ mt: 3 }}>Opening Hours</Typography>
+            {formData.openingHours.map((hour, index) => (
+              <Grid container spacing={1} key={index} sx={{ mb: 2 }}>
+                <Grid item xs={3}>
+                <TextField
+                label="Day"
+                name="day"
+                value={hour.day}
+                onChange={(e) => handleOpeningHoursChange(index, 'day', e.target.value)}
+                select
+                fullWidth
+                required
+              >
+                {daysOfWeek.map((day) => (
+                  <MenuItem key={day} value={day}>
+                    {day}
+                  </MenuItem>
+                ))}
+              </TextField>
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    label="Open Time"
+                    name="openTime"
+                    type="time"
+                    value={hour.openTime}
+                    onChange={(e) => handleOpeningHoursChange(index, 'openTime', e.target.value)}
+                    fullWidth
+                    required
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    label="Close Time"
+                    name="closeTime"
+                    type="time"
+                    value={hour.closeTime}
+                    onChange={(e) => handleOpeningHoursChange(index, 'closeTime', e.target.value)}
+                    fullWidth
+                    required
+                  />
+                </Grid>
+                
+              </Grid>
+            ))}
+            <Button
+              startIcon={<AddCircleOutline />}
+              onClick={addOpeningHour}
+              color="primary"
+              sx={{ mb: 2 }}
+            >
+              Add Opening Hour
+            </Button>
+          </>
         )}
-      </Box>
+
+        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mb: 2 }}>
+          Register
+        </Button>
+        <Typography>
+          Already have an account? <Link href={`/login/${userType}`}>Log In</Link>
+        </Typography>
+      </form>
     </Box>
   );
 }
