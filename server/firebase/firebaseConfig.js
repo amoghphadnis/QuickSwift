@@ -7,12 +7,14 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
 
-  apiKey: "AIzaSyBhJJvdVsh1tAldUGQcp-S0ZOR7sf843o8",
-  authDomain: "quickswiftproject.firebaseapp.com",
-  projectId: "quickswiftproject",
-  storageBucket: "quickswiftproject.firebasestorage.app",
-  messagingSenderId: "638754807792",
-  appId: "1:638754807792:web:b0231c16ba6d3d1fd08735"
+  apiKey: "AIzaSyAuxSIUbWffyqo4Z4BJv4N52XgbJUNV0Fg",
+  authDomain: "quickswift-delivery.firebaseapp.com",
+  databaseURL: "https://quickswift-delivery-default-rtdb.firebaseio.com",
+  projectId: "quickswift-delivery",
+  storageBucket: "quickswift-delivery.firebasestorage.app",
+  messagingSenderId: "115587492327",
+  appId: "1:115587492327:web:66ed4e9ed8c32408607542",
+  measurementId: "G-99CFM3XN1X"
 
 }
 

@@ -55,6 +55,29 @@ function Register({ userType }) {
     }
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    console.log('name..!!',name)
+    console.log('files..!!',files)
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+
+    if (files && files[0].size > maxSize) {
+      alert('File size exceeds the maximum limit of 10MB.');
+      return;
+    }
+
+    if (files && files[0]) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prevData => ({
+          ...prevData,
+          [name]: reader.result // Store the base64 string
+        }));
+      };
+      reader.readAsDataURL(files[0]); // Convert file to base64
+    }
+    console.log('formdata..!!',formData)
+  };
 
   const handleOpeningHoursChange = (index, field, value) => {
     setFormData((prevData) => {
@@ -184,20 +207,7 @@ function Register({ userType }) {
     }
   };
 
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    console.log('name..!!',name)
-    if (files) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prevData => ({
-          ...prevData,
-          [name]: reader.result, // Store the base64 string instead of the file object
-        }));
-      };
-      reader.readAsDataURL(files); // Convert the file to a base64-encoded string
-    }
-  };
+ 
 
   return (
     <Box
@@ -254,13 +264,12 @@ function Register({ userType }) {
           fullWidth
           sx={{ mb: 2 }}
         />
-       <TextField
-          type="text"
-          name="profilePicture"
-          
-          onChange={handleChange}
-          style={{ marginBottom: '16px' }}
-        />
+      <input
+  type="file"
+  name="profilePicture"
+  onChange={handleFileChange}
+  style={{ marginBottom: '16px' }}
+/>
 
         {userType === 'driver' && (
           <>
@@ -359,20 +368,9 @@ function Register({ userType }) {
               <MenuItem value="bakery">Bakery</MenuItem>
               <MenuItem value="other">Other</MenuItem>
             </TextField>
-            <TextField 
-               label="Business Logo URL" 
-               name="businessLogo" 
-               value={formData.businessLogo} 
-               onChange={handleChange} 
-               fullWidth 
-               sx={{ mb: 2 }} />
-            <TextField 
-              label="Banner Image URL" 
-              name="bannerImage" 
-              value={formData.bannerImage} 
-              onChange={handleChange} 
-              fullWidth 
-              sx={{ mb: 2 }} />
+            <input type="file" name="businessLogo" onChange={handleFileChange} style={{ marginBottom: '16px' }} />
+            <input type="file" name="bannerImage" onChange={handleFileChange} style={{ marginBottom: '16px' }} />
+
             <TextField
               label="Business Address"
               type="text"
