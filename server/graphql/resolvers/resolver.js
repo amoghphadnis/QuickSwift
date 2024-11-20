@@ -40,7 +40,6 @@ export const resolvers = {
       verifyAuthToken(headers);
       try {
         const menuItems = await Menu.find({ businessId }).populate('businessId');
-        console.log('menuItems...!!',menuItems)
         return menuItems;
       } catch (error) {
         throw new Error('Error retrieving menu items: ' + error.message);
@@ -48,7 +47,7 @@ export const resolvers = {
     },
     getMenuItemsList: async (_, __, { headers }) => {
       verifyAuthToken(headers);
-
+       console.log('helo....!!')
       try {
           // Fetch all menu items and populate the businessType field from the Business model
           const menuItemsList = await Menu.find().populate('businessId');
@@ -59,7 +58,7 @@ export const resolvers = {
             return {
                 id: itemObject._id.toString(), // Ensure `id` is mapped correctly from `_id`
                 ...itemObject,
-                businessType: itemObject.businessId?.businessType || null,
+                businessType: itemObject.businessId?.businessType.toString() || null,
                 businessId: itemObject.businessId?._id.toString() || null // Ensure businessId exists and is a string
             };
         });
@@ -420,6 +419,19 @@ resetPassword: async (_, {userId, token, newPassword }) => {
   } catch (error) {
     console.error("Error in resetPassword:", error.message);
     throw new Error("Failed to reset password");
+  }
+},
+updateAdminApprovalStatus: async (_, { id, adminApprovalStatus }) => {
+  try {
+      const updatedMenuItem = await Menu.findByIdAndUpdate(
+          id,
+          { adminApprovalStatus },
+          { new: true } // Return the updated document
+      );
+      return updatedMenuItem;
+  } catch (error) {
+      console.error('Error updating admin approval status:', error);
+      throw new Error('Failed to update admin approval status.');
   }
 }
 

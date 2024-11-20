@@ -32,15 +32,14 @@ const AdminMenuApproval = () => {
                                 description
                                 price
                                 quantity
-                                availabilityStatus
-                                imageUrl
+                                stockStatus
+                                imageItem
                                 unitOfMeasurement
                                 allergenInformation
-                                bakedGoodsType
                                 category
-                                businessId
                                 adminApprovalStatus
                                 businessType
+                                businessId
                             }
                         }
                     `
@@ -64,31 +63,54 @@ const AdminMenuApproval = () => {
 
     // Handle admin approval change for a menu item
     const handleApprovalChange = async (id, approvedStatus) => {
-        // const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token');
 
-        // try {
-        //     const response = await fetch('http://localhost:5000/graphql', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'Authorization': `Bearer ${token}`,
-        //         },
-        //         body: JSON.stringify({
-        //             query: APPROVE_MENU_ITEM.loc.source.body,
-        //             variables: { id, adminApprovalStatus: approvedStatus },
-        //         }),
-        //     });
-
-        //     const result = await response.json();
-        //     if (result.errors) {
-        //         console.error('Error approving item:', result.errors);
-        //     } else {
-        //         console.log('Item approved successfully:', result.data.approveMenuItem);
-        //         fetchMenuItems(); // Refetch items to update the list
-        //     }
-        // } catch (err) {
-        //     console.error('Error approving item:', err);
-        // } 
+        if (!token) {
+            setError('No token found. Please log in.');
+            return;
+        }
+    
+        try {
+            setApproving(true);
+            const response = await fetch('http://localhost:5000/graphql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+                        mutation UpdateAdminApprovalStatus($id: ID!, $adminApprovalStatus: Boolean!) {
+                            updateAdminApprovalStatus(id: $id, adminApprovalStatus: $adminApprovalStatus) {
+                                id
+                                adminApprovalStatus
+                            }
+                        }
+                    `,
+                    variables: { id, adminApprovalStatus: approvedStatus },
+                }),
+            });
+    
+            const result = await response.json();
+    
+            if (result.errors) {
+                throw new Error(result.errors[0].message);
+            }
+    
+            // Update local state to reflect the change
+            setMenuItems((prevItems) =>
+                prevItems.map((item) =>
+                    item.id === id
+                        ? { ...item, adminApprovalStatus: approvedStatus }
+                        : item
+                )
+            );
+        } catch (error) {
+            console.error('Error updating admin approval status:', error);
+            setError(error.message);
+        } finally {
+            setApproving(false);
+        }
     };
 
     useEffect(() => {
@@ -111,9 +133,9 @@ const AdminMenuApproval = () => {
                         <p><strong>Price:</strong> ${item.price}</p>
                         <p><strong>Quantity:</strong> {item.quantity}</p>
                         <p><strong>Category:</strong> {item.category}</p>
-                        <p><strong>Available:</strong> {item.availabilityStatus ? 'Yes' : 'No'}</p>
+                        <p><strong>Available:</strong> {item.stockStatus ? 'Yes' : 'No'}</p>
                         <p><strong>Business Type:</strong> {item.businessType}</p>
-
+                        <p><img src={item.imageItem} alt={item.name} width="100" height="100" /></p>
                         <label>
                             <strong>Admin Approval Status:</strong>
                             <input
