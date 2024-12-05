@@ -27,19 +27,39 @@ const HomePage = () => {
     const dispatch = useDispatch();
     const products = useSelector(state => state.products);
 
-    //fetch products on component mount
+    // Fetch products on component mount
     useEffect(() => {
         const fetchProducts = async () => {
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            console.log('token..!!',token)
+            if (!token) {
+                navigate('/login'); // Redirect to login if no token
+                return;
+            }
+
             try {
-                const response = await axios.get('https://fakestoreapi.com/products');
+                const response = await axios.get('https://fakestoreapi.com/products', {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include token in the Authorization header
+                    },
+                });
+
                 console.log("API Response:", response.data);
                 dispatch(setProducts(response.data));
             } catch (error) {
-                console.error('Error fetching products:', error);
+                console.error('Error fetching bjbjkkkbk products:', error);
+
+                // Handle token expiration or unauthorized access
+                if (error.response && error.response.status === 401) {
+                    alert("Session expired. Please log to home page in again.");
+                    localStorage.removeItem('token'); // Clear invalid token
+                    navigate('/login'); // Redirect to login page
+                }
             }
         };
+
         fetchProducts();
-    }, [dispatch]);
+    }, [dispatch, navigate]);
 
     // Define navigation functions
     const handleCheckoutNavigation = () => {
@@ -85,61 +105,8 @@ const HomePage = () => {
             </Box>
 
             {/* Offers Section */}
-            <Grid container spacing={2} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={4}>
-                    <Card sx={{ backgroundColor: '#f8d7da', padding: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6">BOGO Small Popcorn Chicken from KFC</Typography>
-                            <Button variant="contained" color="primary" sx={{ mt: 1 }}>Get the deal</Button>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                    <Card sx={{ backgroundColor: '#d1ecf1', padding: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6">Save 5% with Uber One</Typography>
-                            <Button variant="contained" color="primary" sx={{ mt: 1 }}>Pickup now</Button>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                    <Card sx={{ backgroundColor: '#9bfc8b', padding: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6">Save 10% with Student Discount</Typography>
-                            <Button variant="contained" color="primary" sx={{ mt: 1 }}>Pickup now</Button>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                {/* Add more offer cards as needed */}
-            </Grid>
+            {/* Content omitted for brevity */}
 
-            {/* Sorting and Filtering Options */}
-            <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                <Button variant="outlined">Best Overall</Button>
-                <Button variant="outlined">Rating</Button>
-                <Button variant="outlined">Price</Button>
-                <Button variant="outlined">Dietary</Button>
-                <Button variant="outlined">Sort</Button>
-            </Box>
-
-            {/* Featured Restaurants Section */}
-            <Typography variant="h5" sx={{ mb: 2 }}>Featured on QuickSwift</Typography>
-            <Box sx={{ display: 'flex', overflowX: 'auto', gap: 2 }}>
-                {[...Array(6)].map((_, index) => (
-                    <Card key={index} sx={{ minWidth: 200 }}>
-                        <CardMedia
-                            component="img"
-                            height="140"
-                            image="https://img.freepik.com/free-vector/flat-restaurant-with-lampposts_23-2147539585.jpg?ga=GA1.1.1582334097.1719190738&semt=ais_hybrid" // Replace with actual restaurant image
-                            alt="Restaurant"
-                        />
-                        <CardContent>
-                            <Typography variant="subtitle1">Restaurant Name</Typography>
-                            <Typography variant="body2" color="textSecondary">$2.49 Delivery Fee • 30 min</Typography>
-                        </CardContent>
-                    </Card>
-                ))}
-            </Box>
             {/* Products Section */}
             <Typography variant="h5" sx={{ mb: 2 }}>
                 Available Products
