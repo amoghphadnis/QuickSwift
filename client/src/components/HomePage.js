@@ -31,11 +31,10 @@ const HomePage = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await axios.get('https://fakestoreapi.com/products');
-                console.log("API Response:", response.data);
+                const response = await axios.get('http://localhost:5000/api/products');
                 dispatch(setProducts(response.data));
             } catch (error) {
-                console.error('Error fetching products:', error);
+                console.error('Error fetching food products:', error);
             }
         };
         fetchProducts();
