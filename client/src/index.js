@@ -2,12 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { Provider } from 'react-redux';
+import store from './redux/store';
 import reportWebVitals from './reportWebVitals';
+import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <Provider store={store}>
+      {/* Wrap App with BrowserRouter */}
+      <BrowserRouter future={{
+        v7_startTransition: true,
+      }}>
+        <App />
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>
 );
 

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import groceryStoreList from '../BusinessCategory/groceryStoreList.json';
 import {
     Typography,
@@ -842,16 +844,16 @@ function MenuManagementComponent() {
                                             variant="outlined"
                                             color="primary"
                                             onClick={() => handleEdit(item)}
+                                            startIcon={<FontAwesomeIcon icon={faEdit} />}
                                         >
-                                            Edit
                                         </Button>
                                         <Button
                                             variant="outlined"
-                                            color="secondary"
+                                            color="error"
                                             onClick={() => handleDelete(item.itemId)}
-                                            style={{ marginLeft: "8px" }}
+                                            startIcon={<FontAwesomeIcon icon={faTrash} />}
+                                            style={{ marginTop: "5px" }}
                                         >
-                                            Delete
                                         </Button>
                                     </TableCell>
                                 </TableRow>
