@@ -38,6 +38,7 @@ const HomePage = () => {
             }
 
             try {
+<<<<<<< HEAD
                 const response = await axios.get('https://fakestoreapi.com/products', {
                     headers: {
                         Authorization: `Bearer ${token}`, // Include token in the Authorization header
@@ -55,6 +56,12 @@ const HomePage = () => {
                     localStorage.removeItem('token'); // Clear invalid token
                     navigate('/login'); // Redirect to login page
                 }
+=======
+                const response = await axios.get('http://localhost:5000/api/products');
+                dispatch(setProducts(response.data));
+            } catch (error) {
+                console.error('Error fetching food products:', error);
+>>>>>>> 34e730668641aca9b1e2a066cbc4fa72fed20172
             }
         };
 

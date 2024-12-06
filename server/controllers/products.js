@@ -5,16 +5,28 @@ export const getProducts = async (req, res) => {
   try {
     // Fetch data from multiple APIs (e.g., FakeStore, Open Food Facts, Grocery API)
     const [fakeStore, openFood, grocery] = await Promise.all([
-      axios.get("https://fakestoreapi.com/products"),
-      axios.get("https://world.openfoodfacts.org/api/v0/product/737628064502.json"),
-      axios.get('https://grocery-api-example.com/products'),
+      axios.get('https://api.yelp.com/v3/businesses/search?categories=restaurants&location=your_location', {
+        headers: { Authorization: `Bearer ${YOUR_YELP_API_KEY}` },
+    }),
+    axios.get('https://world.openfoodfacts.org/category/ready-meals.json'),
     ]);
 
     // Combine the data from all APIs into a single array
     const combinedData = [
-      ...fakeStore.data,
-      ...openFood.data.products, // Adjust based on API response structure
-      ...grocery.data,
+      ...yelp.data.businesses.map((biz) => ({
+        id: biz.id,
+        name: biz.name,
+        price: biz.price,
+        image: biz.image_url,
+        description: biz.categories.map((cat) => cat.title).join(', '),
+    })),
+    ...openFood.data.products.map((product) => ({
+        id: product.code,
+        name: product.product_name,
+        price: product.price || 'N/A',
+        image: product.image_url,
+        description: product.categories_tags.join(', '),
+    })),
     ];
 
     // Sort the combined data by price in ascending order

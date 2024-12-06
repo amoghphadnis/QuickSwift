@@ -9,22 +9,28 @@ const Products = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const response = await axios.get('http://localhost:5000/api/products');
-      dispatch(setProducts(response.data));
+        try {
+            const response = await axios.get('http://localhost:5000/api/products');
+            dispatch(setProducts(response.data));
+        } catch (error) {
+            console.error('Error fetching food products:', error);
+        }
     };
     fetchProducts();
-  }, [dispatch]);
+}, [dispatch]);
 
-  return (
-    <div>
+return (
+  <div>
       {products.map((product) => (
-        <div key={product.id}>
-          <h3>{product.title}</h3>
-          <p>{product.price}</p>
-        </div>
+          <div key={product.id}>
+              <h3>{product.name}</h3>
+              <img src={product.image} alt={product.name} />
+              <p>{product.description}</p>
+              <p>{product.price}</p>
+          </div>
       ))}
-    </div>
-  );
+  </div>
+);
 };
 
 export default Products;
