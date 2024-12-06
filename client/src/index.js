@@ -2,11 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-<<<<<<< HEAD
-import {Provider } from 'react-redux';
-=======
 import { Provider } from 'react-redux';
->>>>>>> 34e730668641aca9b1e2a066cbc4fa72fed20172
 import store from './redux/store';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
@@ -15,16 +11,12 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-<<<<<<< HEAD
-    <App />
-=======
       {/* Wrap App with BrowserRouter */}
       <BrowserRouter future={{
         v7_startTransition: true,
       }}>
         <App />
       </BrowserRouter>
->>>>>>> 34e730668641aca9b1e2a066cbc4fa72fed20172
     </Provider>
   </React.StrictMode>
 );
