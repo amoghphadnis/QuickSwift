@@ -1,16 +1,22 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const ProductList = () => {
-    const products = useSelector(state => state.products);
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        axios.get('/api/products')
+            .then(response => setProducts(response.data))
+            .catch(error => console.error(error));
+    }, []);
 
     return (
         <div className="product-list">
             {products.map(product => (
                 <div key={product.id} className="product">
-                    <img src={product.imageItem || 'https://via.placeholder.com/150'} alt={product.name} />
+                    <img src={product.imageUrl} alt={product.name} />
                     <h3>{product.name}</h3>
-                    <p>{product.category}</p>
+                    <p>{product.description}</p>
                     <span>${product.price}</span>
                     <button>Add to Cart</button>
                 </div>

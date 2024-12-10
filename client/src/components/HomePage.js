@@ -1,70 +1,53 @@
-import React, { useState } from "react";
-import { useQuery } from '@apollo/client';
-import { GET_ALL_MENU_ITEMS } from '../graphql/menuItemQueries';
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setProducts } from "../redux/productsSlice";
-import { addToCart } from '../redux/cartSlice';
-import ProductDetails from './Products/ProductDetails';
+import axios from "axios";
 import { Button, Box, Card, CardMedia, CardContent, Grid, IconButton, Typography } from '@mui/material';
-import PizzaSticker from '../Assets/Icons/pizza.svg';
-import FastFood from '../Assets/Icons/Fast-Food.svg';
-import Cafe from '../Assets/Icons/cafe.svg';
-import IceCream from '../Assets/Icons/ice-cream.svg';
-import Grocery from '../Assets/Icons/grocery.svg';
-import Dessert from '../Assets/Icons/Desserts.svg';
-import Indian from '../Assets/Icons/Indian.svg';
-import Mexican from '../Assets/Icons/Mexican.svg';
-import BreakFast from '../Assets/Icons/Break-Fast.svg';
-import Chinese from '../Assets/Icons/Chinese.svg';
-import Sandwich from '../Assets/Icons/sandwich.svg';
-import Vegetarian from '../Assets/Icons/Vegetarian.svg';
-import American from '../Assets/Icons/American.svg';
-import Bakery from '../Assets/Icons/bakery.svg';
-import Salad from '../Assets/Icons/salad.svg';
-import StreetFood from '../Assets/Icons/Street-Food.svg';
-import SeaFood from '../Assets/Icons/Sea-food.svg';
+import PizzaSticker from '../Assets/Icons/pizza.png';
+import FastFood from '../Assets/Icons/Fast-Food.png';
+import Cafe from '../Assets/Icons/cafe.png';
+import IceCream from '../Assets/Icons/ice-cream.png';
+import Grocery from '../Assets/Icons/grocery.png';
+import Dessert from '../Assets/Icons/Desserts.png';
+import Indian from '../Assets/Icons/Indian.png';
+import Mexican from '../Assets/Icons/Mexican.png';
+import BreakFast from '../Assets/Icons/Break-Fast.png';
+import Chinese from '../Assets/Icons/Chinese.png';
+import Sandwich from '../Assets/Icons/sandwich.png';
+import Vegetarian from '../Assets/Icons/Vegetarian.png';
+import American from '../Assets/Icons/American.png';
+import Bakery from '../Assets/Icons/bakery.png';
+import Salad from '../Assets/Icons/salad.png';
+import StreetFood from '../Assets/Icons/Street-Food.png';
+import SeaFood from '../Assets/Icons/Sea-food.png';
 
 const HomePage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const products = useSelector(state => state.products);
-    const [selectedProduct, setSelectedProduct] = useState(null); // Track selected product
-    const [modalOpen, setModalOpen] = useState(false);
 
-    // Fetch products using Apollo Client
-    const { loading, error, data } = useQuery(GET_ALL_MENU_ITEMS, {
-        onCompleted: (data) => {
-            console.log('Query Data:', data);
-            dispatch(setProducts(data.getMenuItemsList));
-        },
-    });
+    //fetch products on component mount
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await axios.get('https://fakestoreapi.com/products');
+                console.log("API Response:", response.data);
+                dispatch(setProducts(response.data));
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        };
+        fetchProducts();
+    }, [dispatch]);
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error.message}</p>;
-
-    const handleCardClick = (product) => {
-        setSelectedProduct(product);
-        setModalOpen(true);
+    // Define navigation functions
+    const handleCheckoutNavigation = () => {
+        navigate('/checkout');
     };
 
-    const handleModalClose = () => {
-        setModalOpen(false);
-        setSelectedProduct(null);
-    };
-
-    const handleAddToCart = () => {
-        // Add product to cart logic
-        console.log('Added to cart:', selectedProduct);
-        dispatch(addToCart(selectedProduct));
-        navigate('/cart');
-        setModalOpen(false);
-    };
-
-    const handleProceedToCheckout = () => {
-        // Navigate to checkout page or handle checkout logic
-        console.log('Proceeding to checkout with:', selectedProduct);
-        setModalOpen(false);
+    const handleOrderTrackingNavigation = () => {
+        navigate('/order-tracking');
     };
 
     return (
@@ -141,17 +124,9 @@ const HomePage = () => {
 
             {/* Featured Restaurants Section */}
             <Typography variant="h5" sx={{ mb: 2 }}>Featured on QuickSwift</Typography>
-            <Box sx={{ display: 'flex', overflow: 'hidden', gap: 2 }}>
+            <Box sx={{ display: 'flex', overflowX: 'auto', gap: 2 }}>
                 {[...Array(6)].map((_, index) => (
-                    <Card key={index} sx={{
-                        transition: 'transform 0.3s, box-shadow 0.3s',
-                        '&:hover': {
-                            transform: 'scale(1.05)', // Slightly enlarge the card
-                            boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)', // Add shadow on hover
-                            cursor: 'pointer', // Change cursor on hover
-                        }, minWidth: 200
-                    }} onClick={() => navigate(`/product/${product.id}`)}
-                    >
+                    <Card key={index} sx={{ minWidth: 200 }}>
                         <CardMedia
                             component="img"
                             height="140"
@@ -172,42 +147,30 @@ const HomePage = () => {
             <Grid container spacing={3}>
                 {products.map((product) => (
                     <Grid item xs={12} sm={6} md={4} key={product.id}>
-                        <Card
-                            sx={{
-                                transition: 'transform 0.3s, box-shadow 0.3s',
-                                '&:hover': {
-                                    transform: 'scale(1.05)', // Slightly enlarge the card
-                                    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)', // Add shadow on hover
-                                    cursor: 'pointer', // Change cursor on hover
-                                },
-                            }}
-                            product={product}
-                            onClick={() => handleCardClick(product)} // Navigate on click
-                        >
+                        <Card>
                             <CardMedia
                                 component="img"
                                 height="140"
-                                image={product.imageItem || "https://via.placeholder.com/150"} // Fallback image
-                                alt={product.name}
+                                image={product.image || "https://via.placeholder.com/150"} // Fallback image
+                                alt={product.title}
                             />
                             <CardContent>
-                                <Typography variant="h6">{product.name}</Typography>
+                                <Typography variant="h6">{product.title}</Typography>
                                 <Typography variant="body2" color="textSecondary">
                                     ${product.price}
                                 </Typography>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => navigate(`/product/${product.id}`)}
+                                >
+                                    View Details
+                                </Button>
                             </CardContent>
                         </Card>
                     </Grid>
                 ))}
             </Grid>
-
-            <ProductDetails
-                open={modalOpen}
-                onClose={handleModalClose}
-                product={selectedProduct}
-                onAddToCart={handleAddToCart}
-                onProceedToCheckout={handleProceedToCheckout}
-            />
         </Box>
     );
 };
