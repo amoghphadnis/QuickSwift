@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { toast } from 'react-toastify';
 import groceryStoreList from '../BusinessCategory/groceryStoreList.json';
 import {
     Typography,
@@ -50,7 +51,8 @@ function MenuManagementComponent() {
         discount: 0,
         stockStatus: true,
         customCategory: '',
-        customSubcategories: ''
+        customSubcategories: '',
+        customUnitofMeasurements: '',
     });
 
     const [businessInfo, setBusinessInfo] = useState({
@@ -471,7 +473,7 @@ function MenuManagementComponent() {
                         quantity: parseInt(menuItem.quantity || '0', 10),
                         stockStatus: menuItem.stockStatus,
                         imageItem: menuItem.imageItem,
-                        unitOfMeasurement: menuItem.unitOfMeasurement,
+                        unitOfMeasurement: menuItem.unitOfMeasurement === 'Other' ? menuItem.customUnitOfMeasurement : menuItem.unitOfMeasurement,
                         allergenInformation: menuItem.allergenInformation,
                         category: menuItem.category === 'Other' ? menuItem.customCategory : menuItem.category,
                         businessId: businessInfo.id,
@@ -517,7 +519,15 @@ function MenuManagementComponent() {
         const maxSize = 10 * 1024 * 1024; // 10MB limit
 
         if (files && files[0].size > maxSize) {
-            alert('File size exceeds the maximum limit of 10MB.');
+            // Display a toast message  
+            toast.error('File size exceeds the maximum limit of 10MB.', {
+                position: 'bottom-center',
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
             return;
         }
 
@@ -528,6 +538,15 @@ function MenuManagementComponent() {
                     ...prevData,
                     [name]: reader.result // Store the base64 string
                 }));
+                // Display a toast message  
+                toast.success('File uploaded successfully!', {
+                    position: 'bottom-center',
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
             };
             reader.readAsDataURL(files[0]); // Convert file to base64
         }
@@ -633,6 +652,7 @@ function MenuManagementComponent() {
                             </Grid>
                         )}
                         <Grid item xs={12} sm={6}>
+                            <InputLabel>Category</InputLabel>
                             <Select
                                 fullWidth
                                 name="category"
@@ -665,6 +685,7 @@ function MenuManagementComponent() {
                         )}
                         {businessInfo.businessType === "grocery_store" && (
                             <Grid item xs={12} sm={6}>
+                                <InputLabel>Subcategory</InputLabel>
                                 <Select
                                     fullWidth
                                     name="subcategory"
@@ -695,20 +716,45 @@ function MenuManagementComponent() {
                         )}
                         {businessInfo.businessType === "grocery_store" && (
                             <Grid item xs={12} sm={6}>
+                                <InputLabel>Unit of Measurement</InputLabel>
                                 <Select
                                     fullWidth
                                     name="unitOfMeasurement"
                                     value={menuItem.unitOfMeasurement}
-                                    onChange={handleChange}
+                                    onChange={(e) => {
+                                        const selectedUnit = e.target.value;
+                                        setMenuItem((prevState) => ({
+                                            ...prevState,
+                                            unitOfMeasurement: selectedUnit,
+                                            customUnitOfMeasurement: selectedUnit === 'Other' ? '' : prevState.customUnitOfMeasurement,
+                                        }));
+                                    }}
                                     required
                                 >
-                                    <MenuItem value="">Select Unit</MenuItem>
+                                    <MenuItem value="" label="Select Unit of Measurement">Select Unit</MenuItem>
                                     {getUnits().map((unit, index) => (
                                         <MenuItem key={index} value={unit}>
                                             {unit}
                                         </MenuItem>
                                     ))}
+                                    <MenuItem value="Other">Other</MenuItem>
                                 </Select>
+                            </Grid>
+                        )}
+                        {menuItem.unitOfMeasurement === 'Other' && (
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Custom Unit of Measurement"
+                                    name="customUnitOfMeasurement"
+                                    value={menuItem.customUnitOfMeasurement}
+                                    onChange={(e) =>
+                                        setMenuItem((prevState) => ({
+                                            ...prevState,
+                                            customUnitOfMeasurement: e.target.value,
+                                        }))
+                                    }
+                                />
                             </Grid>
                         )}
                         <Grid item xs={12} sm={6}>
@@ -738,7 +784,7 @@ function MenuManagementComponent() {
                                 component="label"
                                 fullWidth
                             >
-                                Upload Image
+                                Upload your product Image
                                 <input
                                     type="file"
                                     name="imageItem"
@@ -746,6 +792,13 @@ function MenuManagementComponent() {
                                     onChange={handleFileChange}
                                 />
                             </Button>
+                            {menuItem.imageItem && (
+                                <img
+                                    src={menuItem.imageItem}
+                                    alt="Uploaded Image"
+                                    style={{ width: '200px', height: 'auto' }} // adjust size as needed  
+                                />
+                            )}
                         </Grid>
                         <Grid item xs={12}>
                             <FormControlLabel
