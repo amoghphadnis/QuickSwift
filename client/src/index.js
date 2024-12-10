@@ -4,6 +4,8 @@ import './index.css';
 import App from './App';
 import { Provider } from 'react-redux';
 import store from './redux/store';
+import { ApolloProvider } from '@apollo/client';
+import client from './apolloClient';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom'; // Import BrowserRouter
 
@@ -15,7 +17,9 @@ root.render(
       <BrowserRouter future={{
         v7_startTransition: true,
       }}>
-        <App />
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
       </BrowserRouter>
     </Provider>
   </React.StrictMode>
