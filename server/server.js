@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const productRoutes = require('./routes/products');
 const bodyParser = require('body-parser');
 
 dotenv.config();
@@ -19,6 +18,3 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 
 // API Routes
 app.use('/api/products', require('./routes/products'));
-app.use('/api', productRoutes);
-app.use('/graphql', graphqlHTTP({ schema, rootValue: resolvers }));
-app.use('/api/orders', orderRoutes); // RESTful route

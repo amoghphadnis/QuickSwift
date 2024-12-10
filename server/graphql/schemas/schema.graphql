@@ -80,22 +80,6 @@ type MenuItem {
     businessType: String
 }
 
-type Query {
-    getMenuItemsList: [MenuItem!] # Fetches all products
-}
-
-type MenuItem {
-    id: ID!
-    name: String!
-    description: String
-    price: Float!
-    quantity: Int
-    category: String
-    image: String
-    stockStatus: Boolean
-    featured: Boolean
-}
-
 type OpeningHour {
     day: String!
     openTime: String!
