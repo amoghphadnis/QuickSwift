@@ -60,7 +60,7 @@ const Navbar = () => {
             <>
               <Button color="inherit" component={Link} to="/customer/profile">Profile</Button>
               <Button color="inherit" component={Link} to="/order-tracking">My Orders</Button>
-              <Button color="inherit" component={Link} to="/checkout">Checkout</Button>
+              <Button color="inherit" component={Link} to="/cartpage">Cart</Button>
               <Button color="inherit" component={Link} to="/customer/home">Home</Button>
             </>
           ) : isTokenValid && userType === 'delivery' ? (

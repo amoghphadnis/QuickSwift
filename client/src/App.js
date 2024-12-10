@@ -6,7 +6,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Profile from './components/customer/ProfileComponent';
 import HomePage from './components/HomePage';
-import CheckoutPage from './components/customer/Checkout';
+import CartPage from './components/Products/CartPage';
+import CheckoutPage from './components/Products/Checkout';
 import OrderTrackingPage from './components/customer/OrderTracking';
 import TrackOrder from './components/customer/TrackOrder';
 import AdminComponent from './components/Admin/AdminComponent';
@@ -23,7 +24,9 @@ import PromotionsComponent from './components/Business/PromotionsComponent';
 import ResetPassword from './components/ResetPassword';
 import LandingPage from './components/LandingPage/LandingPage';
 import LandingPageHeader from './components/LandingPage/Header';
-import DriverDashboard from './components/Driver/Dashboard'; // Import Driver's Dashboard
+import DriverDashboard from './components/Driver/Dashboard';
+import { ToastContainer } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const App = () => {
   const location = useLocation();
@@ -65,9 +68,10 @@ const App = () => {
 
         <Route path="/customer/profile" element={<Profile />} />
         <Route path="/customer/home" element={<HomePage />} />
+        <Route path="/cart" element={<CartPage />} />
 
         {/* Checkout and Order Tracking Routes */}
-        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/checkout/" element={<CheckoutPage />} />
         <Route path="/order-tracking" element={<OrderTrackingPage />} />
         <Route path="/track-order/:orderId" element={<TrackOrder />} />
 
@@ -92,6 +96,7 @@ const App = () => {
         {/* Fallback route: Redirect any other invalid path to the homepage */}
         <Route path="*" element={<Navigate to="/login/customer" replace />} />
       </Routes>
+      <ToastContainer />
     </UserProvider>
   );
 };
