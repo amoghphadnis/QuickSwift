@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faEye } from '@fortawesome/free-solid-svg-icons';
 import groceryStoreList from '../BusinessCategory/groceryStoreList.json';
 import {
     Typography,
@@ -24,6 +24,10 @@ import {
     Box,
     FormGroup,
     FormControlLabel,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
 
 function MenuManagementComponent() {
@@ -33,7 +37,8 @@ function MenuManagementComponent() {
     const [isEditing, setIsEditing] = useState(false);
     const [editItemId, setEditItemId] = useState(null);
     const [categoryList, setCategoryList] = useState([]);
-
+    const [viewItem, setViewItem] = useState(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const [menuItem, setMenuItem] = useState({
         name: '',
@@ -368,6 +373,64 @@ function MenuManagementComponent() {
     };
 
 
+    const handleView = async (itemId) => {
+        try {
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                throw new Error("No token found. Please log in.");
+            }
+
+            // Fetch item details by ID
+            const response = await fetch("http://localhost:5000/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    query: `
+                    query GetMenuItem($itemId: ID!) {
+                        getMenuItem(itemId: $itemId) {
+                            id
+                            name
+                            description
+                            price
+                            quantity
+                            category
+                            subcategory
+                            stockStatus
+                            unitOfMeasurement
+                            allergenInformation
+                            imageItem
+                            featured
+                            discount
+                        }
+                    }
+                    `,
+                    variables: { itemId },
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.errors) {
+                throw new Error(result.errors[0].message);
+            }
+
+            // Store the item details in state
+            const itemDetails = result.data.getMenuItem;
+            setViewItem(itemDetails);
+            setIsDialogOpen(true);
+        } catch (error) {
+            console.error("Error fetching item details:", error);
+        }
+    };
+
+    const handleCloseDialog = () => {
+        setIsDialogOpen(false);
+        setViewItem(null);
+    };
 
     // Function to handle delete action
     const handleDelete = async (itemId) => {
@@ -747,7 +810,7 @@ function MenuManagementComponent() {
                                 />
                             </Button>
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid item xs={12} sm={6}>
                             <FormControlLabel
                                 control={
                                     <Checkbox
@@ -787,7 +850,7 @@ function MenuManagementComponent() {
             <Typography variant="h4" gutterBottom>
                 Menu Items
             </Typography>
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} elevation={3} sx={{ padding: 0, marginBottom: 4 }}>
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -798,21 +861,22 @@ function MenuManagementComponent() {
                             <TableCell>Quantity</TableCell>
                             <TableCell>Stock Status</TableCell>
                             <TableCell>Image</TableCell>
-                            <TableCell>Unit of Measurement</TableCell>
-                            <TableCell>Allergen Info</TableCell>
+                            {/* <TableCell>Unit of Measurement</TableCell> */}
+                            {/* <TableCell>Allergen Info</TableCell> */}
                             <TableCell>Category</TableCell>
-                            <TableCell>Subcategory</TableCell>
-                            <TableCell>Featured</TableCell>
-                            <TableCell>Discount</TableCell>
-                            <TableCell>Approval Status</TableCell>
+                            {/* <TableCell>Subcategory</TableCell> */}
+                            {/* <TableCell>Featured</TableCell> */}
+                            {/* <TableCell>Discount</TableCell> */}
+                            {/* <TableCell>Approval Status</TableCell> */}
                             <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {Array.isArray(menuItems) && menuItems.length > 0 ? (
-                            menuItems.map((item) => (
+                            menuItems.map((item, index) => (
                                 <TableRow key={item.id}>
-                                    <TableCell>{item.itemId}</TableCell>
+                                    <TableCell>{index + 1}</TableCell>
+                                    {/* <TableCell>{item.itemId}</TableCell> */}
                                     <TableCell>{item.name}</TableCell>
                                     <TableCell>{item.description}</TableCell>
                                     <TableCell>{item.price}</TableCell>
@@ -828,21 +892,21 @@ function MenuManagementComponent() {
                                             height="100"
                                         />
                                     </TableCell>
-                                    <TableCell>{item.unitOfMeasurement}</TableCell>
-                                    <TableCell>{item.allergenInformation}</TableCell>
+                                    {/* <TableCell>{item.unitOfMeasurement}</TableCell> */}
+                                    {/* <TableCell>{item.allergenInformation}</TableCell> */}
                                     <TableCell>{item.category}</TableCell>
-                                    <TableCell>{item.subcategory}</TableCell>
-                                    <TableCell>
+                                    {/* <TableCell>{item.subcategory}</TableCell> */}
+                                    {/* <TableCell>
                                         {item.featured ? "Yes" : "No"}
-                                    </TableCell>
-                                    <TableCell>{item.discount}</TableCell>
-                                    <TableCell>
+                                    </TableCell> */}
+                                    {/* <TableCell>{item.discount}</TableCell> */}
+                                    {/* <TableCell>
                                         {item.adminApprovalStatus ? "Approved" : "Pending"}
-                                    </TableCell>
+                                    </TableCell> */}
                                     <TableCell>
                                         <Button
                                             variant="outlined"
-                                            color="primary"
+                                            color="success"
                                             onClick={() => handleEdit(item)}
                                             startIcon={<FontAwesomeIcon icon={faEdit} />}
                                         >
@@ -852,6 +916,14 @@ function MenuManagementComponent() {
                                             color="error"
                                             onClick={() => handleDelete(item.itemId)}
                                             startIcon={<FontAwesomeIcon icon={faTrash} />}
+                                            style={{ marginLeft: "5px" }}
+                                        >
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            color="info"
+                                            onClick={() => handleView(item.itemId)}
+                                            startIcon={<FontAwesomeIcon icon={faEye} />}
                                             style={{ marginTop: "5px" }}
                                         >
                                         </Button>
@@ -868,6 +940,32 @@ function MenuManagementComponent() {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
+                <DialogTitle>Item Details</DialogTitle>
+                <DialogContent>
+                    {viewItem && (
+                        <>
+                            <Typography variant="h6">Name: {viewItem.name}</Typography>
+                            <Typography variant="body1">Description: {viewItem.description}</Typography>
+                            <Typography variant="body1">Price: ${viewItem.price}</Typography>
+                            <Typography variant="body1">Quantity: {viewItem.quantity}</Typography>
+                            <Typography variant="body1">Stock Status: {viewItem.stockStatus ? 'Available' : 'Unavailable'}</Typography>
+                            {/* <Typography variant="body1">Unit of Measurement: {viewItem.unitOfMeasurement}</Typography> */}
+                            <Typography variant="body1">Allergen Information: {viewItem.allergenInformation}</Typography>
+                            <Typography variant="body1">Category: {viewItem.category}</Typography>
+                            {/* <Typography variant="body1">Featured: {viewItem.featured}</Typography> */}
+                            <Typography variant="body1">Discount: {viewItem.discount}</Typography>
+                            {/* <Typography variant="body1">Approval Status: {viewItem.adminApprovalStatus}</Typography> */}
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 }
