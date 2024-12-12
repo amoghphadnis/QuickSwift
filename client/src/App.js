@@ -45,7 +45,7 @@ const App = () => {
       ) : isDriverDashboard ? null : ( // No header for Driver's Dashboard (handled in the component itself)
         <>
           <TopBar /> {/* TopBar for all other routes */}
-          <Navbar />
+          {/* <Navbar /> */}
         </>
       )}
 

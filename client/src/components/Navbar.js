@@ -73,6 +73,7 @@ const Navbar = () => {
 
   
   return (
+    <>
     <AppBar position="static">
       <Toolbar>
         <IconButton edge="start" color="inherit" aria-label="logo">
@@ -222,6 +223,7 @@ const Navbar = () => {
           </DialogActions>
         </Dialog>
       </div>
+    </>
     </>
   );
 };

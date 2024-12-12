@@ -142,7 +142,7 @@ const TopBar = () => {
       {/* Sidebar Drawer */}
       <Drawer anchor="left" open={isDrawerOpen} onClose={toggleDrawer}>
         <Box sx={{ width: 250 }}>
-          <List sx={{ display: 'flex'}}>
+          <List sx={{ display: 'flex', flexDirection: 'column'}}>
           {isTokenValid && userType === 'admin' ? (
             <>
               <Button color="inherit" component={Link} to="/admin/dashboard">Dashboard</Button>
